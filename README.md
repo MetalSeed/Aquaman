@@ -15,7 +15,7 @@
 │   ├── user_interface      # UI（信息显示，交互输入）
 │   ├── automation          # 自动操作
 │   ├── player_classifier   # 玩家分类器
-│   └── aqm_utils           # 通用工具函数
+│   └── tools           # 通用工具函数
 ├── tests                   # 测试代码文件夹
 │   ├── test_aquaman.py     # 主程序的测试
 │   ├── test_stragety.py    # 策略的测试
