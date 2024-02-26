@@ -12,7 +12,7 @@
 │   ├── recognizer          # 图像识别器
 │   ├── hands_converter     # 牌桌识别器（手牌转换器）
 │   ├── dicisionmaker       # 决策器
-│   ├── monitor             # 显示器（信息显示，交互输入）
+│   ├── user_interface      # UI（信息显示，交互输入）
 │   ├── automation          # 自动操作
 │   ├── player_classifier   # 玩家分类器
 │   └── aqm_utils           # 通用工具函数
@@ -21,6 +21,7 @@
 │   ├── test_stragety.py    # 策略的测试
 │   └── test_utils.py       # 工具函数的测试
 |── aquaman.py              # 主程序
+|── config.ini              # 程序主要配置
 └── README.md               # 项目说明文档
 
 ## 使用说明
