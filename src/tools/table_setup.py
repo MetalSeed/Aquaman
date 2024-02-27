@@ -26,8 +26,30 @@ import cv2
 from aqm_utils import get_file_full_name
 
 # wepoker 不同的矩形框名字列表
-rect_names1 = ["P0_status", "P0_desicion", "P0_pot", "P0_funds", "P0_photo", "P1_status", "P1_desicion", "P1_pot", "P1_funds", "P1_photo", "P2_status", "P2_desicion", "P2_pot", "P2_funds", "P2_photo", "P3_status", "P3_desicion", "P3_pot", "P3_funds", "P3_photo", "P4_status", "P4_desicion", "P4_pot", "P4_funds", "P4_photo", "P5_status", "P5_desicion", "P5_pot", "P5_funds", "P5_photo", "P6_status", "P6_desicion", "P6_pot", "P6_funds", "P6_photo", "P7_status", "P7_desicion", "P7_pot", "P7_funds", "P7_photo", "P8_status", "P8_desicion", "P8_pot", "P8_funds", "P8_photo"]
-rect_names2 = ["Pot", "Total_Pot", "Board1", "Board2", "Board3", "Board4", "Board5", "Hero_Fold", "Hero_Bet", "Hero_Call", "bet1", "bet2", "bet3", "bet4", "bet5"]
+rect_names1 = [
+    "P0_status", "P0_desicion", "P0_pot", "P0_funds", "P0_photo", 
+    "P1_status", "P1_desicion", "P1_pot", "P1_funds", "P1_photo",
+    "P2_status", "P2_desicion", "P2_pot", "P2_funds", "P2_photo", 
+    "P3_status", "P3_desicion", "P3_pot", "P3_funds", "P3_photo", 
+    "P4_status", "P4_desicion", "P4_pot", "P4_funds", "P4_photo", 
+    "P5_status", "P5_desicion", "P5_pot", "P5_funds", "P5_photo", 
+    "P6_status", "P6_desicion", "P6_pot", "P6_funds", "P6_photo", 
+    "P7_status", "P7_desicion", "P7_pot", "P7_funds", "P7_photo", 
+    "P8_status", "P8_desicion", "P8_pot", "P8_funds", "P8_photo"
+    ]
+
+rect_names2 = [
+    "Pot", "Total_Pot", 
+    "Board1_rank", "Board1_suit", 
+    "Board2_rank", "Board2_suit", 
+    "Board3_rank", "Board3_suit", 
+    "Board4_rank", "Board4_suit", 
+    "Board5_rank", "Board5_suit", 
+    "Hero_hands1_rank","Hero_hands1_suit","Hero_hands2_rank","Hero_hands2_suit", 
+    "Hero_Bet", "Hero_Call", 
+    "bet1", "bet2", "bet3", "bet4", "bet5"
+    ]
+
 rect_names3 = ["Dealer"]
 rect_names4 = ["Player_ID"]
 

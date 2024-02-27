@@ -2,6 +2,7 @@
 
 import os
 
+# file_full_name = get_file_full_name('1.jpg', 2, 'data', 'output', 'table_setup')
 def get_file_full_name(file_name, up_levels, *subfolders):
     # 获取当前脚本的绝对路径
     script_dir = os.path.dirname(__file__)

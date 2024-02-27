@@ -1,0 +1,2 @@
+# table_recognizer采集的OCR信息 在hands_converter里不同stage交叉校验
+# 交叉校验数据集
