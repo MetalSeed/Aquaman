@@ -1,6 +1,4 @@
-
-
-# 输入table窗口的截图，用鼠标画框，来捕捉框的坐标，作为item的mapping数据
+# 输入tables，用鼠标画框，来捕捉框的坐标，作为item的mapping数据
 # 
 
 
@@ -124,6 +122,7 @@ def main(max_players, image_number):
     while True:
         img_copy = extended_img.copy()
 
+        # 右侧输出所有矩形名称
         for idx, name in enumerate(rect_names):
             x, y = calculate_text_position(idx, start_x, start_y, column_width, max_items_per_column, height)
             cv2.putText(img_copy, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
@@ -133,8 +132,10 @@ def main(max_players, image_number):
         for idx, rect in enumerate(rectangles):
             cv2.rectangle(img_copy, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 2)
             # 在矩形框名称旁边显示坐标
-            text_position = (width + 10, 30 * (idx+1))
-            cv2.putText(img_copy, f"{rect_names[idx]}: {rect}", text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+            x, y = calculate_text_position(idx, start_x, start_y, column_width, max_items_per_column, height)
+            text_position = (x + 150, y)
+            cv2.putText(img_copy, f"done", text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+            # cv2.putText(img_copy, f"{rect_names[idx]}: {rect}", text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
         if current_rectangle != (-1, -1, -1, -1):
             cv2.rectangle(img_copy, (current_rectangle[0], current_rectangle[1]), (current_rectangle[2], current_rectangle[3]), (0, 0, 255), 2)

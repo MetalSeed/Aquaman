@@ -1,0 +1,1 @@
+# shots for table_setup or hands_converter
