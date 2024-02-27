@@ -128,6 +128,11 @@ def main(max_players, image_number):
     image_path = get_file_full_name(image_name, 2, 'data', 'input', 'table_setup')
     img = cv2.imread(image_path)
 
+    # 如果文件不存在，退出
+    if img is None:
+        print(f"无法读取图像 {image_path}。")
+        return
+
     # 扩展图片以在右侧留白，用于显示文本
     height, width = img.shape[:2]
     extended_width = 900  # 根据需要调整

@@ -1,43 +1,40 @@
 # tableshots for table_setup or hands_converter
 
-import pygetwindow as gw
-import pyautogui
-import datetime
-import time
-import os
-from aqm_utils import get_file_full_name
 
-def capture_window_screenshot(window_title):
-    try:
-        # 查找并获取窗口
-        window = gw.getWindowsWithTitle(window_title)[0]
-        if window:
-            while True:
-                # 获取当前时间作为文件名
-                now = datetime.datetime.now()
-                filename = now.strftime("%Y%m%d%H%M%S") + ".png"
-                
-                filepath = get_file_full_name(filename, 2, "data", "output", "tables_collector")
+import cv2
+import numpy as np
 
-                # 确保窗口是激活的
-                window.activate()
-                # 等待窗口被激活，可能需要根据实际情况调整等待时间
-                time.sleep(1)
+from recognizer.image_reconizer_matching import find_template_in_region
 
-                # 截图并保存
-                screenshot = pyautogui.screenshot(region=(window.left, window.top, window.width, window.height))
-                screenshot.save(filepath)
-                print(f"截图已保存至：{filepath}")
+def compare_image_regions(image1, image2, region):
+    # 裁剪指定区域
+    x, y, width, height = region
+    cropped_img1 = image1[y:y+height, x:x+width]
+    cropped_img2 = image2[y:y+height, x:x+width]
 
-                # 等待1秒再次截图
-                time.sleep(1)
-        else:
-            print("未找到指定的窗口。")
-    except Exception as e:
-        print(f"发生错误: {e}")
+    # 比较两个区域
+    difference = cv2.subtract(cropped_img1, cropped_img2)
+    b, g, r = cv2.split(difference)
+
+    if cv2.countNonZero(b) == 0 and cv2.countNonZero(g) == 0 and cv2.countNonZero(r) == 0:
+        print("两个区域相同。")
+        return True
+    else:
+        print("两个区域不相同。")
+        return False
+
 
 # 使用示例
-window_title = "雷电模拟器-1"  # 修改为你的窗口标题
+image_path1 = 'path/to/your/first/image.jpg'
+image_path2 = 'path/to/your/second/image.jpg'
+# 读取图片
+img1 = cv2.imread(image_path1)
+img2 = cv2.imread(image_path2)
 
+region = (100, 100, 50, 50)  # 示例区域
 
-capture_window_screenshot(window_title)
+compare_image_regions(img1, img2, region)
+
+# 每秒截图
+# 比较Fold
+# 去重
