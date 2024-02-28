@@ -36,7 +36,8 @@ class ScreenshotUtil:
         self.window_monitor = WindowMonitor(window_title)
 
     def capture_screen(self):
-        window = self.window_monitor.find_window()
+        self.window_monitor.find_window()
+        window = self.window_monitor.window
         if window:
             if not self.window_monitor.is_window_valid():
                 self.window_monitor.wait_for_window()
