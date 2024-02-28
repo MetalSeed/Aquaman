@@ -1,6 +1,10 @@
 # 通用函数工具
 
 import os
+import time
+import cv2
+import pyautogui
+
 
 # file_full_name = get_file_full_name('1.jpg', 2, 'data', 'output', 'table_setup')
 def get_file_full_name(file_name, up_levels, *subfolders):
@@ -17,3 +21,4 @@ def get_file_full_name(file_name, up_levels, *subfolders):
     # 构建目标文件的绝对路径，包括可变数量的子文件夹路径
     file_full_name = os.path.join(final_dir, *subfolders, file_name)
     return file_full_name
+

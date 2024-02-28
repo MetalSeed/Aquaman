@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 def find_template_in_region(main_image, template_image, region):
