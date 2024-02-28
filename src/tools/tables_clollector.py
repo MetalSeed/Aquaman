@@ -58,6 +58,6 @@ if __name__ == "__main__":
     table_region = (128, 259, 408, 556)
     action_region = (100, 801, 183, 869)
     icon_fold_path = get_file_full_name('fold.jpg', 2, 'data', 'input', 'talbes_collector')
-    template = cv2.imread(icon_fold_path)
+    template = cv2.imread(icon_fold_path, cv2.IMREAD_GRAYSCALE)
     
     main(window_title, template, action_region, table_region)
