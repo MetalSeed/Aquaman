@@ -37,9 +37,16 @@ def compare_images_in_region(image1, image2, region=None, threshold=0.9):
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-    # 计算两个灰度图像的结构相似度指数
-    score, _ = cv2.compareHist(img1_gray, img2_gray, cv2.HISTCMP_CORREL)
-    # 比较相似度阈值
+    # 计算两个图像的直方图
+    hist1 = cv2.calcHist([img1_gray], [0], None, [256], [0, 256])
+    hist2 = cv2.calcHist([img2_gray], [0], None, [256], [0, 256])
+    
+    # 将直方图的数据类型转换为 CV_32F 来满足 compareHist 的要求
+    hist1 = hist1.astype(np.float32)
+    hist2 = hist2.astype(np.float32)
+    
+    # 比较直方图
+    score, _ = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
     return score < threshold
 
 def main(window_title, template, action_region, table_region):
