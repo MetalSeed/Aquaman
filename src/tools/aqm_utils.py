@@ -4,7 +4,7 @@ import os
 import cv2
 
 
-
+# 获取data文件夹下的文件的绝对路径
 def get_file_full_name(file_name, *subfolders):
     # 获取当前脚本的绝对路径
     script_dir = os.path.dirname(__file__)
