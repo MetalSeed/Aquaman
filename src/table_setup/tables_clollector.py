@@ -20,7 +20,7 @@ from src.tools.aqm_utils import get_file_full_name
 
 from src.tools.screen_operations import ScreenshotUtil
 
-def compare_images_in_region(image1, image2, region=None, threshold=0.9):
+def same_images_in_region(image1, image2, region=None, threshold=1):
     # 比较两张图像指定区域的相似度。
     if image1 is None or image2 is None:
         print("图片不存在。")
@@ -47,7 +47,7 @@ def compare_images_in_region(image1, image2, region=None, threshold=0.9):
     
     # 比较直方图
     score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-    return score > threshold
+    return score >= threshold
 
 def main(window_title, template, action_region, table_region):
     last_screenshot = None
@@ -62,11 +62,11 @@ def main(window_title, template, action_region, table_region):
         if screenshot_util.match_template_in_screenshot(windowshot, template, action_region, 0.9):
             print("Template found in screenshot.")
 
-            if last_screenshot and compare_images_in_region(last_screenshot, windowshot, table_region):
+            if last_screenshot and same_images_in_region(last_screenshot, windowshot, table_region):
                 print("Screenshots are similar; not saving.")
             else:
                 now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-                save_path = get_file_full_name(f"{now}.png", 2, 'data', 'output', 'tables_collector')
+                save_path = get_file_full_name(f"{now}.png", 'data', 'output', 'tables_collector')
                 screenshot_util.save_screenshot(windowshot, save_path)
                 print(f"Screenshot saved: {save_path}")
                 last_screenshot = windowshot
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     action_region = (100, 801, 183, 869)
     table_region = (128, 259, 408, 556)
 
-    icon_fold_path = get_file_full_name('fold.png', 2, 'data', 'input', 'tables_collector')
+    icon_fold_path = get_file_full_name('fold.png', 'data', 'input', 'tables_collector')
     template = cv2.imread(icon_fold_path)
     
     main(window_title, template, action_region, table_region)

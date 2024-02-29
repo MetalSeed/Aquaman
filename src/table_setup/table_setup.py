@@ -136,7 +136,7 @@ def main(max_players, image_number):
         rect_names = rect_names4
 
 
-    image_path = get_file_full_name(image_name, 2, 'data', 'input', 'table_setup')
+    image_path = get_file_full_name(image_name, 'data', 'input', 'table_setup')
     img = cv2.imread(image_path)
 
     # 如果文件不存在，退出
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     
     # 构造文件名和保存路径
     filename = f"{image_number}.txt"
-    full_path = get_file_full_name(filename, 2, 'data', 'output', 'table_setup')
+    full_path = get_file_full_name(filename, 'data', 'output', 'table_setup')
     
     # 调用函数保存数据到文件，确保传递正确的 rect_names 列表
     save_rectangles_to_file(full_path, rect_names, rectangles)

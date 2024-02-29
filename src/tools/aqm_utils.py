@@ -1,16 +1,15 @@
 # 通用函数工具
 
 import os
-import time
 import cv2
-import pyautogui
 
 
 
-def get_file_full_name(file_name, up_levels, *subfolders):
+def get_file_full_name(file_name, *subfolders):
     # 获取当前脚本的绝对路径
     script_dir = os.path.dirname(__file__)
     
+    up_levels = 2
     # 根据指定的层数向上遍历获取父目录
     for _ in range(up_levels):
         script_dir = os.path.dirname(script_dir)
@@ -22,7 +21,7 @@ def get_file_full_name(file_name, up_levels, *subfolders):
     file_full_name = os.path.join(final_dir, *subfolders, file_name)
     return file_full_name
 #示例
-# file_full_name = get_file_full_name('1.jpg', 2, 'data', 'output', 'table_setup')
+# file_full_name = get_file_full_name('1.jpg', 'data', 'output', 'table_setup')
 
 # 画框工具
 def draw_multiple_rectangles_and_save(image_path, rectangles, save_path):
@@ -41,12 +40,4 @@ def draw_multiple_rectangles_and_save(image_path, rectangles, save_path):
     cv2.imwrite(save_path, img)
     print(f"保存修改后的图片到 {save_path}")
 
-# 使用示例
-image_path = get_file_full_name('1.png', 2, 'data', 'input', 'table_setuo')
-save_path  = get_file_full_name('1_new.png', 2, 'data', 'output', 'table_setuo')
 
-table_region = (128, 259, 408, 556)
-action_region = (100, 801, 183, 869)
-rectangles = [table_region, action_region]  # 给定的多个矩形框参数
-
-draw_multiple_rectangles_and_save(image_path, rectangles, save_path)
