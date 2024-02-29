@@ -46,7 +46,7 @@ def compare_images_in_region(image1, image2, region=None, threshold=0.9):
     hist2 = hist2.astype(np.float32)
     
     # 比较直方图
-    score, _ = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+    score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
     return score < threshold
 
 def main(window_title, template, action_region, table_region):
