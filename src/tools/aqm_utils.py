@@ -42,8 +42,8 @@ def draw_multiple_rectangles_and_save(image_path, rectangles, save_path):
     print(f"保存修改后的图片到 {save_path}")
 
 # 使用示例
-image_path = get_file_full_name('1.png', 2, 'data', 'output', 'tables_collector')
-save_path  = get_file_full_name('1_new.png', 2, 'data', 'output', 'tables_collector')
+image_path = get_file_full_name('1.png', 2, 'data', 'input', 'table_setuo')
+save_path  = get_file_full_name('1_new.png', 2, 'data', 'output', 'table_setuo')
 
 table_region = (128, 259, 408, 556)
 action_region = (100, 801, 183, 869)

@@ -47,7 +47,7 @@ def compare_images_in_region(image1, image2, region=None, threshold=0.9):
     
     # 比较直方图
     score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-    return score < threshold
+    return score > threshold
 
 def main(window_title, template, action_region, table_region):
     last_screenshot = None
@@ -59,14 +59,14 @@ def main(window_title, template, action_region, table_region):
             print("Failed to capture screenshot.")
             time.sleep(1)
             continue
-        if screenshot_util.match_template_in_screenshot(windowshot, template, action_region, threshold=0.9):
+        if screenshot_util.match_template_in_screenshot(windowshot, template, action_region, 0.9):
             print("Template found in screenshot.")
 
-            if last_screenshot and not compare_images_in_region(last_screenshot, windowshot, table_region):
+            if last_screenshot and compare_images_in_region(last_screenshot, windowshot, table_region):
                 print("Screenshots are similar; not saving.")
             else:
                 now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-                save_path = get_file_full_name(f"{now}.png", 2, 'data', 'output', 'table_setup')
+                save_path = get_file_full_name(f"{now}.png", 2, 'data', 'output', 'tables_collector')
                 screenshot_util.save_screenshot(windowshot, save_path)
                 print(f"Screenshot saved: {save_path}")
                 last_screenshot = windowshot
