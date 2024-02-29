@@ -1,10 +1,24 @@
 # tableshots for table_setup or hands_converterß
 import datetime
+import os
+import sys
 import time
 import cv2
 import numpy as np
-from aqm_utils import get_file_full_name
-from screen_operations import ScreenshotUtil
+
+# 获取当前脚本文件的绝对路径
+script_path = os.path.abspath(__file__)
+# 获取当前脚本所在的目录（tools）
+script_dir = os.path.dirname(script_path)
+parent_dir = os.path.dirname(script_dir)
+grandparent_dir = os.path.dirname(parent_dir)
+# 降Aquaman子目录添加到sys.path
+sys.path.append(grandparent_dir)
+
+
+from src.tools.aqm_utils import get_file_full_name
+
+from src.tools.screen_operations import ScreenshotUtil
 
 def compare_images_in_region(image1, image2, region=None, threshold=0.9):
     # 比较两张图像指定区域的相似度。
@@ -55,9 +69,10 @@ def main(window_title, template, action_region, table_region):
 
 if __name__ == "__main__":
     window_title = "雷电模拟器-1"
-    table_region = (128, 259, 408, 556)
     action_region = (100, 801, 183, 869)
-    icon_fold_path = get_file_full_name('fold.png', 2, 'data', 'input', 'talbes_collector')
-    template = cv2.imread(icon_fold_path, cv2.IMREAD_GRAYSCALE)
+    table_region = (128, 259, 408, 556)
+
+    icon_fold_path = get_file_full_name('fold.png', 2, 'data', 'input', 'tables_collector')
+    template = cv2.imread(icon_fold_path)
     
     main(window_title, template, action_region, table_region)

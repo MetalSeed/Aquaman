@@ -22,8 +22,19 @@
 # 总结：用table_mapping读取并总结出mapping坐标，用于screen_craper_mapping.py
 
 import os
+import sys
 import cv2
-from aqm_utils import get_file_full_name
+# 获取当前脚本文件的绝对路径
+script_path = os.path.abspath(__file__)
+# 获取当前脚本所在的目录（tools）
+script_dir = os.path.dirname(script_path)
+parent_dir = os.path.dirname(script_dir)
+grandparent_dir = os.path.dirname(parent_dir)
+# 降Aquaman子目录添加到sys.path
+sys.path.append(grandparent_dir)
+
+
+from src.tools.aqm_utils import get_file_full_name
 
 # wepoker 不同的矩形框名字列表
 rect_names1 = [
