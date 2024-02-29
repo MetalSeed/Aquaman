@@ -48,16 +48,27 @@ class ScreenshotUtil:
         else:
             print(f"Window '{self.window_monitor.window_title}' not found.")
             return None
-        
-    def match_template_in_screenshot(self, screenshot, template, region=None):
+    # screenshot 是截图的PIL, template是用cv2.read()
+    def match_template_in_screenshot(self, screenshot, template, region, threshold=0.8):
         """在截图中的指定区域寻找模板图片"""
         if screenshot is None:
+            print("Invalid screenshot.")
             return False
         if region:
             screenshot = screenshot.crop(region)  # PIL Image.crop expects a tuple (left, upper, right, lower)
-        screenshot_array = np.array(screenshot)
-        screenshot_gray = cv2.cvtColor(screenshot_array, cv2.COLOR_BGR2GRAY)
-        res = cv2.matchTemplate(screenshot_gray, template, cv2.TM_CCOEFF_NORMED)
+        screenshot_np = np.array(screenshot) # 将PIL图像转换为numpy数组
+        screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_BGR2GRAY) # 转换颜色空间
+        template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY) # 转换颜色空间
+
+        th, tw = template_gray.shape[:2]
+        # 获取截图的高度和宽度
+        sh, sw = screenshot_gray.shape[:2]
+        # 检查模板是否比截图大
+        if th > sh or tw > sw:
+            print("模板图像的尺寸超过了截图的尺寸，无法进行匹配。")
+            return False
+
+        res = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
         threshold = 0.8
         loc = np.where(res >= threshold)
         return len(loc[0]) > 0  # 如果找到模板，返回 True；否则，返回 False
@@ -69,3 +80,4 @@ class ScreenshotUtil:
             save_path = f"{now}.png"
         screenshot.save(save_path)
         return save_path
+    

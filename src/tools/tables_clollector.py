@@ -38,7 +38,7 @@ def main(window_title, template, action_region, table_region):
             print("Failed to capture screenshot.")
             time.sleep(1)
             continue
-        if screenshot_util.match_template_in_screenshot(windowshot, template, action_region):
+        if screenshot_util.match_template_in_screenshot(windowshot, template, action_region, threshold=0.9):
             print("Template found in screenshot.")
 
             if last_screenshot and not compare_images_in_region(last_screenshot, windowshot, table_region):
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     window_title = "雷电模拟器-1"
     table_region = (128, 259, 408, 556)
     action_region = (100, 801, 183, 869)
-    icon_fold_path = get_file_full_name('fold.jpg', 2, 'data', 'input', 'talbes_collector')
+    icon_fold_path = get_file_full_name('fold.png', 2, 'data', 'input', 'talbes_collector')
     template = cv2.imread(icon_fold_path, cv2.IMREAD_GRAYSCALE)
     
     main(window_title, template, action_region, table_region)
