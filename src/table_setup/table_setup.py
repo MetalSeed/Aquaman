@@ -6,17 +6,18 @@
 
 # 输入：文件编号，自动对应到识别类型（1-4，每个item要画3次框）：
 
-# 识别1：   玩家信息：手牌状态，行动决定，行动数字，后手筹码，头像位置。 共5x9个
-#          输   入：1-3.png （要求全员入池，行动数字有偿有短）
+# 识别1：   牌桌信息：上轮底池，当前底池，5张公共牌位置，hero额外信息：fold， call, raise, rb1, rb2, rb3, rb4, eb5。 共15个
+#          输   入：1.png （要求 river轮，4.png底池长，5.png底池短，6.png正常，可两人模拟）
 
-# 识别2：   牌桌信息：上轮底池，当前底池，5张公共牌位置，hero额外信息：fold， call, raise, rb1, rb2, rb3, rb4, eb5。 共15个
-#          输   入：4-6.png （要求 river轮，4.png底池长，5.png底池短，6.png正常，可两人模拟）
+# 识别2：   玩家信息：手牌状态，行动决定，行动数字，后手筹码，头像位置。 共5x9个
+#          输   入：2 - 10.png （对应位置存货，已行动，行动数字有偿有短）
+
 
 # 识别3：   玩家信息：BTN范围。 共1x1个
-#          输   入：7-max_players*3.png （从下家顺时针，每个button图标）
+#          输   入：11 - 19.png （从下家顺时针，每个button图标）
 
 # 识别4：   玩家ID，buyin, seatdown, leave, joinroom, closepromotion
-#          输   入：n
+#          输   入：20+
 
 # 输出：文件编号.txt，保存矩形框的坐标
 # 总结：用table_mapping读取并总结出mapping坐标，用于screen_craper_mapping.py
@@ -35,21 +36,11 @@ sys.path.append(grandparent_dir)
 
 
 from src.tools.aqm_utils import get_file_full_name
+from src.tools.yaml_operations import update_or_add_to_yaml
 
 # wepoker 不同的矩形框名字列表
-rect_names1 = [
-    "P0_status", "P0_desicion", "P0_pot", "P0_funds", "P0_photo", 
-    "P1_status", "P1_desicion", "P1_pot", "P1_funds", "P1_photo",
-    "P2_status", "P2_desicion", "P2_pot", "P2_funds", "P2_photo", 
-    "P3_status", "P3_desicion", "P3_pot", "P3_funds", "P3_photo", 
-    "P4_status", "P4_desicion", "P4_pot", "P4_funds", "P4_photo", 
-    "P5_status", "P5_desicion", "P5_pot", "P5_funds", "P5_photo", 
-    "P6_status", "P6_desicion", "P6_pot", "P6_funds", "P6_photo", 
-    "P7_status", "P7_desicion", "P7_pot", "P7_funds", "P7_photo", 
-    "P8_status", "P8_desicion", "P8_pot", "P8_funds", "P8_photo"
-    ]
 
-rect_names2 = [
+rect_names1 = [
     "Pot", "Total_Pot", 
     "Board1_rank", "Board1_suit", 
     "Board2_rank", "Board2_suit", 
@@ -57,12 +48,31 @@ rect_names2 = [
     "Board4_rank", "Board4_suit", 
     "Board5_rank", "Board5_suit", 
     "Hero_hands1_rank","Hero_hands1_suit","Hero_hands2_rank","Hero_hands2_suit", 
-    "Hero_Bet", "Hero_Call", 
+    "Hero_fold","Hero_bet", "Hero_call", 
     "bet1", "bet2", "bet3", "bet4", "bet5"
     ]
 
-rect_names3 = ["Dealer"]
-rect_names4 = ["Player_ID"]
+rect_names2 = ["P0_is_active", "P0_status", "P0_pot", "P0_funds", "P0_photo"]
+rect_names3 = ["P1_is_active", "P1_status", "P1_pot", "P1_funds", "P1_photo"]
+rect_names4 = ["P2_is_active", "P2_status", "P2_pot", "P2_funds", "P2_photo"]
+rect_names5 = ["P3_is_active", "P3_status", "P3_pot", "P3_funds", "P3_photo"]
+rect_names6 = ["P4_is_active", "P4_status", "P4_pot", "P4_funds", "P4_photo"]
+rect_names7 = ["P5_is_active", "P5_status", "P5_pot", "P5_funds", "P5_photo"]
+rect_names8 = ["P6_is_active", "P6_status", "P6_pot", "P6_funds", "P6_photo"]
+rect_names9 = ["P7_is_active", "P7_status", "P7_pot", "P7_funds", "P7_photo"]
+rect_names10 = ["P8_is_active", "P8_status", "P8_pot", "P8_funds", "P8_photo"]
+
+rect_names11 = ["P0_dealer"]
+rect_names12 = ["P1_dealer"]
+rect_names13 = ["P2_dealer"]
+rect_names14 = ["P3_dealer"]
+rect_names15 = ["P4_dealer"]
+rect_names16 = ["P5_dealer"]
+rect_names17 = ["P6_dealer"]
+rect_names18 = ["P7_dealer"]
+rect_names19 = ["P8_dealer"]
+
+rect_names20 = ["Player_ID"]
 
 # 全局变量
 rectangles = []  # 存储矩形框的坐标
@@ -120,23 +130,12 @@ def save_rectangles_to_file(filename, rect_names, rectangles):
             file.write(f"{name}: {rect}\n")
 
 
-def main(max_players, image_number):
+def main(image_number, image_path):
     global rectangles
 
-    image_name = f"{image_number}.png"  # 构造文件名
-
-    # 根据图片编号选择对应的矩形框名字列表
-    if 1 <= image_number <= 3:
-        rect_names = rect_names1[:max_players*5]  # 根据玩家数调整列表长度
-    elif 4 <= image_number <= 6:
-        rect_names = rect_names2
-    elif 7 <= image_number <= 7 + max_players * 3 - 1:
-        rect_names = rect_names3
-    else:
-        rect_names = rect_names4
-
-
-    image_path = get_file_full_name(image_name, 'data', 'input', 'table_setup')
+    # 选择对应的 rect_names 列表
+    rect_names = globals()[f"rect_names{image_number}"]
+    
     img = cv2.imread(image_path)
 
     # 如果文件不存在，退出
@@ -194,6 +193,7 @@ def main(max_players, image_number):
 
 if __name__ == '__main__':
 
+    pk_platform = 'wpk'
     # 提示最大玩家数
     max_players = 8
     print(f"最大玩家数: {max_players}")
@@ -201,22 +201,24 @@ if __name__ == '__main__':
     # 提示用户输入图片编号
     image_number = int(input("请输入图片编号: "))
     
-    main(max_players, image_number)
-
-    # 选择对应的 rect_names 列表
-    if 1 <= image_number <= 3:
-        rect_names = rect_names1[:max_players * 5]  # 调整长度以匹配玩家数
-    elif 4 <= image_number <= 6:
-        rect_names = rect_names2
-    elif 7 <= image_number <= 7 + max_players * 3 - 1:
-        rect_names = rect_names3
-    else:
-        rect_names = rect_names4
+    # 构造文件名和读取路径
+    image_name = f"{image_number}.png"  
+    image_path = get_file_full_name(image_name, 'data', 'input', 'table_setup')
     
+    main(image_number, image_path)
+
     # 构造文件名和保存路径
-    filename = f"{image_number}.txt"
-    full_path = get_file_full_name(filename, 'data', 'output', 'table_setup')
-    
+    filename = f"{pk_platform}{max_players}{image_number}.txt"
+    save_path = get_file_full_name(filename, 'data', 'output', 'table_setup')
+    # 选择对应的 rect_names 列表
+    rect_names = globals()[f"rect_names{image_number}"]
     # 调用函数保存数据到文件，确保传递正确的 rect_names 列表
-    save_rectangles_to_file(full_path, rect_names, rectangles)
+    save_rectangles_to_file(save_path, rect_names, rectangles)
 
+    # 加入到yaml文件
+    filename = f"{pk_platform}{max_players}.yaml"            
+    save_path = get_file_full_name(filename, 'data', 'output', 'table_setup')
+
+    # 写入每个矩形框的名字和坐标
+    for name, rect in zip(rect_names, rectangles):
+        print(update_or_add_to_yaml(save_path, [name], rect))

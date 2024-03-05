@@ -44,17 +44,6 @@ class BasicOCR:
         _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         return thresh
 
-
-    # 识别图像中的数字
-    def recognize_digits(self, img):
-        # 预处理图像
-        preprocessed_img = self.preprocess_image(img)
-        # 配置Tesseract以仅识别数字
-        custom_config = r'--oem 3 --psm 6 outputbase digits'
-        # 使用Tesseract OCR识别数字
-        digits = pytesseract.image_to_string(preprocessed_img, config=custom_config)
-        return digits.strip()
-
     # 识别扑克牌的花色 - 四色扑克
     def recognize_suit(self, img):
 
@@ -105,6 +94,25 @@ class BasicOCR:
         result = f'{rank}{suit}' if suit and rank not in ['未能识别', '识别不确定'] else '未能识别'
         return result
        
+    # 识别图像中的数字
+    def recognize_digits(self, img):
+        # 预处理图像
+        preprocessed_img = self.preprocess_image(img)
+        # 配置Tesseract以仅识别数字
+        custom_config = r'--oem 3 --psm 6 outputbase digits'
+        # 使用Tesseract OCR识别数字
+        digits = pytesseract.image_to_string(preprocessed_img, config=custom_config)
+        return digits.strip()
+    
+    # 识别图像中的字符串
+    def recognize_string(self, img):
+        # 预处理图像
+        preprocessed_img = self.preprocess_image(img)
+        # 使用Tesseract OCR识别字符串
+        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        string = pytesseract.image_to_string(preprocessed_img, config=custom_config)
+        return string.strip()
+
 
 class WePokerOCR(BasicOCR):
     def __init__(self):

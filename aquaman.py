@@ -1,11 +1,44 @@
 import datetime
 import sys
 import threading
+from src.recognizer.screen_scraper_mapping import ScreenScraper
+from src.tools.screen_operations import ScreenshotUtil
 
 version = "0.0.1"
 
+
+
 class ThreadManager(threading.Thread):
     pass
+
+
+
+class GameBotThread:
+    def __init__(self, window_title, platform, max_player):
+        self.window_title = window_title
+        self.platform = platform
+        self.max_player = max_player
+
+        self.recognizer = None
+        self.decision_maker = None
+        self.printer = None
+        self.action_performer = None
+    
+    def it_is_my_turn(self):
+        pass
+
+    def run(self):
+        while True:
+            windowshot = self.shoter.capture_screen()
+            if self.it_is_my_turn():
+                # scraper()
+                # hands_converter()
+                # decision_maker()
+                # action_performer()
+                pass
+            else:
+                pass
+
 
 
 # ==== MAIN PROGRAM =====

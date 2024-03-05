@@ -11,3 +11,5 @@
 # specific converter
 
 # class Hands():
+
+# self.action_history = []  # 行动历史记录 '位置'：'动作'：‘金额’

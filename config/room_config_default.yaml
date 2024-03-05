@@ -1,0 +1,45 @@
+application:
+  name: MyApplication
+  version: 1.2.3
+  settings:
+    database:
+      host: localhost
+      port: 5432
+      credentials:
+        username: admin
+        password: secret
+    features:
+      - login
+      - registration
+      - search
+  users:
+    - id: 1
+      name: John Doe
+      email: john.doe@example.com
+      roles:
+        - admin
+        - user
+    - id: 2
+      name: Jane Doe
+      email: jane.doe@example.com
+      roles:
+        - user
+
+# enable_image_recognition_NN = 0
+#
+
+# AI strategy 
+# enable_strategy_NN = 0
+
+# GF strategy 
+# enable_strategy_GTO = 0
+# enable_strategy_add_platform_deviate = "wpk"
+# enable_strategy_add_player_deviate = 0
+# enable_strategy_add_club_deviate = 0
+
+# 允许自动操作
+# enable_automation = 0
+
+# log级别配置
+# 提示级别
+# 存储级别
