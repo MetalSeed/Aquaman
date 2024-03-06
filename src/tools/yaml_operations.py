@@ -57,6 +57,7 @@ def read_tuple_from_yaml(file_path, key):
     if value is not None:
         return tuple(value)  # 将列表转换为元组
     else:
+        print(f"键 {key} 不存在。")
         return None
 
 # # 从YAML文件读取P0_status并赋值给P0_status1

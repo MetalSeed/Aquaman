@@ -18,7 +18,7 @@
 
 from screen_operations import ScreenshotUtil
 from src.recognizer.image_recognizer_OCR import WePokerOCR
-from src.recognizer.screen_scraper_mapping import ScreenScraper
+from src.recognizer.platform_recognizer import ScreenScraper
 
 # 读取房间配置
 # 从配置文件读取平台特定的配置信息
