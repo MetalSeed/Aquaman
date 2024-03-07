@@ -1,0 +1,16 @@
+#配置文件
+# room config
+window_title: '雷电模拟器-1'
+platform: 'wpk'
+max_players: 8
+big_blind: 20
+small_blind: 10
+
+# 配置文件路径
+# room.yaml
+config_path: 
+  - 'config'
+# room_template
+template_path: 
+  - 'config'
+  - 'template'

@@ -23,7 +23,7 @@ def update_nested_dict(dct, keys, value):
             dct[key] = {}
         return update_nested_dict(dct[key], keys[1:], value)
 
-# 往yaml文件写入或更新数据
+# 往yaml文件写入或更新数据，value可以是值，字符串，也可以是List
 def update_or_add_to_yaml(file_path, keys, value):
     try:
         with open(file_path, 'r') as file:
@@ -49,21 +49,52 @@ def update_or_add_to_yaml(file_path, keys, value):
 # print(f"操作结果：{action}")
 
 
-
-def read_tuple_from_yaml(file_path, key):
+# key是列表，就返回列表，key是健，就返回值
+def read_value_from_yaml(file_path, key):
     with open(file_path, 'r') as file:
         data = yaml.load(file, Loader=yaml.FullLoader)
     value = data.get(key)
+    if value is not None:
+        return value
+    else:
+        print(f"键 {key} 不存在。")
+        return None
+
+def read_tuple_from_yaml(file_path, key):
+    value = read_value_from_yaml(file_path, key)
     if value is not None:
         return tuple(value)  # 将列表转换为元组
     else:
         print(f"键 {key} 不存在。")
         return None
 
-# # 从YAML文件读取P0_status并赋值给P0_status1
-# P0_status1 = read_tuple_from_yaml('config.yaml', 'P0_status')
-# print(f"P0_status1: {P0_status1}")
+
+def fill_dict_from_yaml(config_dict, yaml_path):
+    # 从YAML文件读取数据
+    with open(yaml_path, 'r') as file:
+        yaml_data = yaml.load(file, Loader=yaml.FullLoader)
     
+    # 遍历配置字典中的键，并尝试从YAML数据中填充值
+    for key in config_dict.keys():
+        if key in yaml_data:
+            config_dict[key] = yaml_data[key]
+    
+    return config_dict
+
+# # 使用示例
+
+# config_template = {
+#     'window_title': None,
+#     'platform': None,
+#     'max_players': None,
+#     'big_blind': None,
+#     'small_blind': None,
+#     }
+
+# yaml_path = 'config.yaml'  # 假设你的YAML文件名为config.yaml
+# filled_config = fill_dict_from_yaml(config_template, yaml_path)
+# print(filled_config)
 
 
-# 分成写列表和写字典两个函数？ 测试一下直接写列表回怎样
+
+    

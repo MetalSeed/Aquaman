@@ -1,10 +1,10 @@
 import datetime
+import os
 import sys
-import threading
-from src.recognizer.screen_scraper_mapping import ScreenScraper
-from src.tools.screen_operations import ScreenshotUtil
+
 
 version = "0.0.1"
+
 
 
 

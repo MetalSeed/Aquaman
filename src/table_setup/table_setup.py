@@ -41,13 +41,13 @@ from src.tools.yaml_operations import update_or_add_to_yaml
 # wepoker 不同的矩形框名字列表
 
 rect_names1 = [
-    "Pot", "Total_Pot", 
+    "Last_Round_Pot", "Total_Pot", 
     "Board1_rank", "Board1_suit", 
     "Board2_rank", "Board2_suit", 
     "Board3_rank", "Board3_suit", 
     "Board4_rank", "Board4_suit", 
     "Board5_rank", "Board5_suit", 
-    "Hero_hands1_rank","Hero_hands1_suit","Hero_hands2_rank","Hero_hands2_suit", 
+    "Hero_card1_rank","Hero_card1_suit","Hero_card2_rank","Hero_card2_suit", 
     "Hero_fold","Hero_bet", "Hero_call", 
     "bet1", "bet2", "bet3", "bet4", "bet5"
     ]
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     
     # 构造文件名和读取路径
     image_name = f"{image_number}.png"  
-    image_path = get_file_full_name(image_name, 'data', 'input', 'table_setup')
+    image_path = get_file_full_name(image_name, 'data', 'input', 'table_setup', f"{pk_platform}{max_players}")
     
     main(image_number, image_path)
 
@@ -222,3 +222,5 @@ if __name__ == '__main__':
     # 写入每个矩形框的名字和坐标
     for name, rect in zip(rect_names, rectangles):
         print(update_or_add_to_yaml(save_path, [name], rect))
+
+    # 把yaml文件复制到config路径

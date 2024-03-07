@@ -39,16 +39,22 @@ class ScreenshotUtil:
         self.window_monitor.find_window()
         window = self.window_monitor.window
         if window:
-            if not self.window_monitor.is_window_valid():
-                self.window_monitor.wait_for_window()
-            # 使用pyautogui截取指定窗口区域的屏幕
+            start_time = time.time()  # 记录开始时间
+            while not self.window_monitor.find_window() or not self.window_monitor.is_window_valid():
+                """等待窗口出现并进入有效状态"""
+                print(f"Waiting for window '{self.window_title}' to become available...")
+                if time.time() - start_time > 10:  # 超过10秒
+                    print(f"Window '{self.window_monitor.window_title}' is not valid after 10 seconds.")
+                    return None
+                time.sleep(1)  # 短暂休眠以避免密集检测
+
             window_bbox = window.box
             screenshot = pyautogui.screenshot(region=window_bbox)
             return screenshot
         else:
             print(f"Window '{self.window_monitor.window_title}' not found.")
             return None
-    # screenshot 是截图的PIL, template是用cv2.read()
+    # screenshot 是截图的PIL, template是用cv2.read(),在screenshot的region中找template
     def match_template_in_screenshot(self, screenshot, template, region, threshold=0.8):
         """在截图中的指定区域寻找模板图片"""
         if screenshot is None:
@@ -81,3 +87,10 @@ class ScreenshotUtil:
         screenshot.save(save_path)
         return save_path
     
+    def crop_rectangle_from_screenshot(screenshot, region):
+        """
+        :param screenshot: PIL Image对象，表示原始截图。
+        :param region: 矩形区域，格式为(left, upper, right, lower)。
+        """
+        cropped_image = screenshot.crop(region)
+        return cropped_image
