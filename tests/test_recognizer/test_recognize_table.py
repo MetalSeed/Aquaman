@@ -41,5 +41,5 @@ def main(ws_input_path):
 
 if __name__ == '__main__':
     # load_config()
-    ws_input_path = get_file_full_name('ws1.png', 'data', 'test')
+    ws_input_path = get_file_full_name('ws2.png', 'data', 'test')
     main(ws_input_path)

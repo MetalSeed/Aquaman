@@ -140,16 +140,17 @@ class GameOCR:
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         image_area = img.shape[0] * img.shape[1]
 
-        for suit, (lower, upper) in self.status_color_ranges.items():
+        for state, (lower, upper) in self.status_color_ranges.items():
             lower = np.array(lower, dtype="uint8")
             upper = np.array(upper, dtype="uint8")
             mask = cv2.inRange(hsv, lower, upper)
 
-            # 如果颜色比例足够，并且最大轮廓足够大，则返回花色
-            if self.check_color_presence(mask):
-                largest_contour = self.find_largest_contour(mask)
-                if largest_contour and self.is_contour_large_enough(largest_contour, image_area):
-                    return suit
+            # 如果颜色比例足够，则返回花色
+            ratio = self.check_color_presence(mask, image_area)
+            # print(f"{state} ratio: {ratio}")
+            if  ratio > self.effective_pixel_ratio:
+                return state
+
         return None
     
     # 识别状态
