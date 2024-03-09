@@ -11,7 +11,7 @@ grandparent_dir = os.path.dirname(parent_dir)
 # 降Aquaman子目录添加到sys.path
 sys.path.append(grandparent_dir)
 
-from src.recognizer.platform_recognizer import filled_room_config, wpkRR
+from src.recognizer.nlth_platform import filled_room_config, wpkRR
 
 # from config import load_config
 
@@ -34,7 +34,7 @@ class Player:
 class Table:
     def __init__(self):
         self.prr = eval(f"{filled_room_config['platform']}RR()") # platform room recognizer
-        # room data
+        # room数据
         self.max_players = None
         self.big_blind = None # 大盲注大小
         self.small_blind = None# 小盲注大小    
@@ -99,7 +99,7 @@ class Table:
 
     # 打包成table_dict发送给hands_converter
     # hands_converter负责把table_dict parse成标准的hands信息
-    def get_table_info(self):
+    def get_table_dict(self):
         # 将当前桌面信息打包成字典。
         return {
             #房间数据
@@ -114,8 +114,12 @@ class Table:
             "dealer_abs_position": self.dealer_abs_position,
             
             #玩家数据
-            "players": [{ "abs_position": player.abs_position, "is_active": player.is_active, 
-                          "status": player.status, "pot": player.pot, "funds": player.funds, "cards": player.cards } for player in self.players],
+            "players": [{ "abs_position": player.abs_position,
+                          "is_active": player.is_active, 
+                          "status": player.status, 
+                          "pot": player.pot, 
+                          "funds": player.funds, 
+                          "cards": player.cards } for player in self.players],
             #hero button数据
             "call_value": self.call_value,
             "bet1_value": self.bet1_value,
@@ -125,10 +129,10 @@ class Table:
             "bet5_value": self.bet5_value,
         }
     
+    def table_check(self):
+        pass
+        # 检查各种异常情况
+    
 
 
 
-#增加到round信息里
-        # self.total_players = None # 玩家总数
-        # self.active_players = None # 当前回合仍在游戏中的玩家数
-        # self.stage = None  # 当前游戏阶段：preflop, flop, turn, river

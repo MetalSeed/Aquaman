@@ -13,7 +13,7 @@ grandparent_dir = os.path.dirname(parent_dir)
 sys.path.append(grandparent_dir)
 
 from loadconfig import load_config
-from src.recognizer.table import Table
+from src.recognizer.nlth_table import Table
 from src.tools.aqm_utils import get_file_full_name
 
 
@@ -29,7 +29,7 @@ def main(ws_input_path):
     # table.update_players_data()
 
 
-    table_info = table.get_table_info()
+    table_info = table.get_table_dit()
     
     for key, value in table_info.items():
         if key == 'players':
@@ -40,6 +40,7 @@ def main(ws_input_path):
             print(f"{key}: {value}")
 
 if __name__ == '__main__':
-    # load_config()
-    ws_input_path = get_file_full_name('ws2.png', 'data', 'test')
+    ws_input_path = get_file_full_name('ws1.png', 'data', 'test')
     main(ws_input_path)
+
+# status to be done

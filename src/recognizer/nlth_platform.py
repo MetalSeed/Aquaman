@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import cv2
+import numpy as np
 
 # 获取当前脚本文件的绝对路径
 script_path = os.path.abspath(__file__)
@@ -13,18 +14,23 @@ grandparent_dir = os.path.dirname(parent_dir)
 # 降Aquaman子目录添加到sys.path
 sys.path.append(grandparent_dir)
 
-from src.recognizer.image_recognizer_OCR import GameOCR
+from src.recognizer.image_recognizer import ImageRecognizer
 from src.tools.screen_operations import ScreenshotUtil
 from loadconfig import filled_room_config, filled_room_rects, template_dir
 
 
-class RoomRecognizer(GameOCR):
+class RoomRecognizer(ImageRecognizer):
     def __init__(self):
-        GameOCR.__init__(self)
+        ImageRecognizer.__init__(self)
         self.max_players = filled_room_config['max_players']
         self.window_title = filled_room_config['window_title']
         self.windowshoter = ScreenshotUtil(self.window_title)
         self.windowshot = None
+        # 颜色匹配中的比例
+        self.threshold_color_match_status = 0.01 # 花色识别中，掩码中有效像素比例
+        self.threshold_color_match_hero_turn = 0.01 # hero回合标志颜色比例
+        self.threshold_color_match_is_active = 0.01 # 是否存活颜色比例
+
 
     def takeshot(self):
         self.windowshot = self.windowshoter.capture_screen()
@@ -51,24 +57,39 @@ class RoomRecognizer(GameOCR):
                     return None
 
     # 图像匹配精度 0.9 要求高
-    def image_matching(self, img_PIL, template_path, region):
+    def image_matching(self, template_path, region):
         template_image = cv2.imread(template_path)
         if template_image is None:
             print(f"template: {template_path}不存在")
             return None
-        result = self.windowshoter.match_template_in_screenshot(img_PIL, template_image, region, threshold=0.9)
+        result = self.windowshoter.match_template_in_screenshot(self.windowshot, template_image, region, threshold=0.9)
         return result
 
-
-
-    def is_hero_turn(self):
+    def is_hero_turn_color_matching(self):
+        croped_img = self.windowshot.crop(filled_room_rects['Hero_fold'])
+        result = self.color_matching(croped_img, self.color_ranges_hero_turn, self.threshold_color_match_hero_turn)
+        if result == 'red':
+            return True
+        else:
+            return False
+    
+    def is_hero_turn_tempate_matching(self):
+        # mode 1: 
         file_path = os.path.join(template_dir, 'is_hero_turn.png')
-        result = self.image_matching(self.windowshot, file_path, filled_room_rects['hero_turn'])
+        result = self.image_matching(file_path, filled_room_rects['hero_turn'])
         if result:
             return True
         else:
             return False
-
+    def is_hero_turn(self, mode=1): # 使用模板匹配
+        if mode == 1: # mode 1: 模板匹配
+            result = self.is_hero_turn_tempate_matching()
+        elif mode == 2: # mode 2: 颜色匹配
+            result = self.is_hero_turn_color_matching()
+        if result:
+            return True
+        else:
+            return False
 
     # 桌面信息检测
     # 桌面信息检测
@@ -77,7 +98,7 @@ class RoomRecognizer(GameOCR):
         dap = None
         for i in range(self.max_players):
             file_path = os.path.join(template_dir, 'dealer.png')
-            result = self.image_matching(self.windowshot, file_path, filled_room_rects[f'P{i}_dealer'])
+            result = self.image_matching(file_path, filled_room_rects[f'P{i}_dealer'])
             if result:
                 dap = i
                 break
@@ -106,6 +127,7 @@ class RoomRecognizer(GameOCR):
             if poker:
                 publicly_cards.append(poker)
             else:
+                print(f'公共牌{i+1}不存在')
                 break
         return publicly_cards
     
@@ -123,13 +145,17 @@ class RoomRecognizer(GameOCR):
         poker = self.recognize_poker_card(img_rank, img_suit)
         if poker:
             hero_cards.append(poker)
+        else:
+            print("识别Hero牌失败")
         return hero_cards
 
     def get_is_active(self, abs_position):
-        active = False
-        img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_is_active'])
-        # active  = match_check()##########
-        return active
+        croped_img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_is_active'])
+        result = self.color_matching(croped_img, self.color_ranges_is_active, self.threshold_color_match_is_active)
+        if result == 'pokerback':
+            return True
+        else: 
+            return False
 
     def get_player_status(self, abs_position):
         status = None
@@ -207,20 +233,36 @@ class RoomRecognizer(GameOCR):
 class wpkRR(RoomRecognizer):
     def __init__(self):
         RoomRecognizer.__init__(self)
-        self.effective_pixel_ratio = 0.50 # 花色识别中，掩码中有效像素比例
+        # 颜色匹配 颜色占比 阈值
+        self.threshold_color_match_poker = 0.2 # 判断花色
+        self.threshold_color_match_status = 0.50 # 花色识别中，掩码中有效像素比例
+        self.threshold_color_match_hero_turn = 0.50 # hero回合标志颜色比例
+        self.threshold_color_match_is_active = 0.50 # 是否存活颜色比例
 
+        # 前后景区分度
+        self.threshold_color_diff_poker_background = 30 # 判断是否有文字
+        self.threshold_color_diff_text_background = 30 # 判断是否有文字
 
+        # 文字识别
+        self.threshold_binary_white_text = 100 # 浅色字体二值化阈值
+
+        #################
+        #################
+        #################
+        # 数字文字卡片的后矫正放在这里 #
+        #################
+        #################
+        #################
         # 定义四种花色的HSV颜色范围
-        self.pocker_color_ranges = {
+        self.color_ranges_pocker = {
             'c': ([36, 25, 25], [86, 255,255]),  # 绿色 club
             'h': ([170, 100, 50], [180, 255, 255]),  # 红色 heart
             's': ([0, 0, 0], [180, 255, 30]),     # 黑色 spade
             'd': ([94, 80, 2], [126, 255, 255]),  # 蓝色 diamond
         }
 
-
         # 定义状态的HSV颜色范围
-        self.status_color_ranges = {
+        self.color_ranges_status = {
             'b': ([36, 25, 25], [86, 255,255]),  # 绿色 bet
             'r': ([0, 150, 50], [10, 255, 255]),  # 红色 raise
             'x': ([0, 0, 0], [180, 255, 30]),     # 黑色 check
@@ -228,6 +270,23 @@ class wpkRR(RoomRecognizer):
             'f': ([94, 80, 2], [126, 255, 255]),  # 蓝色 fold
         }
 
+        # 定义状态的HSV颜色范围
+        self.color_ranges_other = {
+            'b': ([36, 25, 25], [86, 255,255]),  # 绿色 bet
+            'r': ([0, 150, 50], [10, 255, 255]),  # 红色 raise
+            'x': ([0, 0, 0], [180, 255, 30]),     # 黑色 check
+            'c': ([94, 80, 2], [126, 255, 255]),  # 蓝色 call
+            'f': ([94, 80, 2], [126, 255, 255]),  # 蓝色 fold
+        }
+        # 定义状态的HSV颜色范围
+        self.color_ranges_hero_turn = {
+            'red1': ([0, 150, 50], [10, 255, 255]),  # 亮红色
+            'red2': ([0, 0, 0], [180, 255, 30]),     # 暗红色
+        }
+        # 定义状态的HSV颜色范围
+        self.color_ranges_is_active = {
+            'pokerback': ([36, 25, 25], [86, 255,255]),  # 绿色
+        }
     def windowshot_input(self, img):
         self.windowshot = img
 
