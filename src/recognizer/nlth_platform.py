@@ -161,6 +161,7 @@ class RoomRecognizer(ImageRecognizer):
         status = None
         img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_status'])
         # status = match_status()############
+        # 在特定平台实现，wpk 颜色+字符
         return status
     
     def get_player_pot(self, abs_position):
