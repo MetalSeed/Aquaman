@@ -19,6 +19,7 @@ from src.recognizer.nlth_platform import filled_room_config, wpkRR
 class Player:
     def __init__(self, abs_position, is_active=False, status=None, pot=None, funds=None, cards=[], id=None):
         self.abs_position = abs_position  # 玩家座位号
+        self.positon = None  # 玩家相对庄家的位置
 
         self.is_active = is_active  # 是否仍在当前回合中       
         self.status = status  # 玩家状态：sitting, all-in，check, call, bet, raise, fold等
@@ -114,6 +115,12 @@ class Table:
             self.players[i].pot = self.prr.get_player_pot(i)
             self.players[i].funds = self.prr.get_player_funds(i)
 
+    # 相对位置是按座位号从小到大的顺序，从庄家开始计算，庄家是0。计算前中后位，要按照total_players做离散
+    def updata_players_positon(self):
+        for i in range(self.max_players):
+            self.players[i].position = (self.players[i].abs_position - self.dealer_abs_position + self.max_players) % self.max_players
+
+
     def undate_platyers_id(self):
         for i in range(self.max_players):
             self.players[i].id = self.prr.get_player_id(i)
@@ -141,14 +148,16 @@ class Table:
             "dealer_abs_position": self.dealer_abs_position,
             
             #玩家数据
-            "players": [{ "abs_position": player.abs_position,
-                          "is_active": player.is_active, 
-                          "status": player.status, 
-                          "pot": player.pot, 
-                          "funds": player.funds, 
-                          "cards": player.cards,
+            "players": [{ 
+                        "abs_position": player.abs_position,
+                        "position": player.position,
+                        "is_active": player.is_active, 
+                        "status": player.status, 
+                        "pot": player.pot, 
+                        "funds": player.funds, 
+                        "cards": player.cards,
                         #    'id': player.id
-                             } for player in self.players],
+                            } for player in self.players],
             #hero button数据
             "call_value": self.call_value,
             "bet1_value": self.bet1_value,
@@ -161,7 +170,5 @@ class Table:
     def room_check(self):
         # 短码，输光，等情况
         # 检查各种异常情况
-    
-
-
-
+        # 少于4人，quit game
+        pass

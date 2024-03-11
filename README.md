@@ -33,4 +33,4 @@
 
 # 平台依赖
 
-# recognizer - image_recognizer_OCR.py - WepokerOCR
+# recognizer - image_recognizer_OCR.py

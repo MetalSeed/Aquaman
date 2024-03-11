@@ -81,3 +81,18 @@ def aquaman():
 
 if __name__ == '__main__':
     aquaman()
+
+def main2():
+    hands = Hands()
+    table = Table()
+
+    table.shoter()
+    talbe.updata_table_info()
+    rounddict = table.get_table_dict()
+
+    round = hands.tabledict2round(rounddict)
+    hands.add_round(round)
+
+    decision = decision_maker(hands)
+
+    # print or play

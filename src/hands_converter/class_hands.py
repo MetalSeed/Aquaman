@@ -20,10 +20,10 @@ class PlayerV2(Player):
         self.position = None  # 玩家相对BTN位置
         self.actionclip = None
 
+        # strategy部分
         self.position_advantage = None  # 位置优势 IP OOP
         self.range_advantage = None  # 范围优势
         self.OD_role = None # offensive deffensive
-
         self.player_type = None
 
 class Round(Table):
@@ -34,7 +34,27 @@ class Round(Table):
         # round数据
         self.active_players = None # 当前回合仍在游戏中的玩家数
         self.stage = None  # 当前游戏阶段：preflop, flop, turn, river  
+
+        # 其他标记
+        self.last_raiser_position = None  # 上一轮加注者 默认是btn，new hands是bb
     
+    def cal_stage(self):
+        if len(self.publicly_cards) == 0:
+            self.stage = 'preflop'
+        elif len(self.publicly_cards) == 3:
+            self.stage = 'flop'
+        elif len(self.publicly_cards) == 4:
+            self.stage = 'turn'
+        elif len(self.publicly_cards) == 5:
+            self.stage = 'river'
+        else:
+            self.stage = None
+            print(f'Stage calculation failed, cards num:{len(self.publicly_cards)}')
+
+    def post_process_round_data(self):
+        self.active_players = sum(player.is_active for player in self.playersV2)
+        self.stage = self.cal_stage()
+
     def tabledict2round(self, table_dict):
         # room data
         self.platform = table_dict['platform']
@@ -50,6 +70,7 @@ class Round(Table):
 
         for i, player in enumerate(table_dict['players']):
             self.playersV2[i].abs_position = player['abs_position']
+            self.playersV2[i].position = player['position']
             self.playersV2[i].is_active = player['is_active']
             self.playersV2[i].status = player['status']
             self.playersV2[i].pot = player['pot']
@@ -64,7 +85,8 @@ class Round(Table):
         self.bet3_value = table_dict['bet3_value']
         self.bet4_value = table_dict['bet4_value']
         self.bet5_value = table_dict['bet5_value']
-
+        # 数据后处理
+        self.post_process_round_data()
 
     def roundtext2round(self, text):
         round = Round()
@@ -75,85 +97,57 @@ class Hands():
     def __init__(self):
         # hands数据
         self.new_hands_flag = True  # 是否有新的手牌
+        self.stage = None  # 是否有新的游戏阶段
         self.total_players = None # 玩家总数
         self.rounds_list = []  # 所有round的列表
         self.action_list = []
     
-    def cal_stage(self, round):
-        if len(round.publicly_cards) == 0:
-            round.stage = 'preflop'
-        elif len(round.publicly_cards) == 3:
-            round.stage = 'flop'
-        elif len(round.publicly_cards) == 4:
-            round.stage = 'turn'
-        elif len(round.publicly_cards) == 5:
-            round.stage = 'river'
-        else:
-            round.stage = None
-            print(f'Stage calculation failed, cards num:{len(round.publicly_cards)}')
-    
-    def cal_position(self, round):
-        # 计算玩家相对BTN位置
-        pass
-    
-
-    def make_up_round_data(self, round):
-        if self.new_hands_flag:
-            # players
-                # positon
-                # position_advantage
-                # range_advantage
-            # round data
-            round.active_players = sum(player.is_active for player in round.playersV2)
-            pass
-        else:
-            # copy position
-            # copy position_advantage
-            # copy range_advantage
-            # OD_role
-            pass
-        round.stage = self.cal_stage(round)
-        # actionclip
-
     def make_up_last_round(self, round):
+        # from hero to last_rasier
         # make up rounddata
+        # update action_list
         pass
-    def make_up_action_list(self, round):
-        # make up action_list
-        pass
-
 
     def add_round(self, round):
         self.new_hands_flag = self.check_new_hands()
+        
+        if self.datacheck is not True:
+            print('Data check failed')
+            return False
 
         if self.new_hands_flag:
             self.__init__()
-            # cal total_players
-            if self.total_players is None and round.stage == 'preflop':
+            if self.total_players is None and round.stage == 'preflop': 
                 self.total_players = sum(1 for player in round.playersV2 if player.funds != 0 or player.pot != 0)
-            # add action_list
         else:
-            if self.datacheck():
-                self.make_up_last_round(round)
-                self.make_up_action_list(round)
-                self.rounds_list.append(round)
-                # add action_list
-                return True
-            else:
-                print('Data check failed')
-                return False
+            self.make_up_last_round(round)# 可以不用
+        
+        # write action clip, add action_list
+        new_stage = 0
+        if new_stage:
+            # make up, hero to last_raiser, lst_raiser默认btn,bb [action]
+            # sb - hero
+            pass
+        else:
+            # hero to hero, 更新last_raiser
+            pass
+        
+        self.rounds_list.append(round)
+        self.stage = round.stage
         self.new_hands_flag = False
+        return True
     
-    def check_new_hands(self):
+    def check_new_hands(self, round):
         flag = False
-        ###
+        if len(round.publicly_cards) == 0 and any(player.pot == round.small_blind for player in round.playersV2) and any(player.pot == round.big_blind for player in round.playersV2):
+            flag = True
         return flag
 
     def datacheck(self):
         check_flag = True
         # 检查数据是否完整
         return check_flag
-        
+
 class HandsConverter():
     def __init__(self):
         self.hands = Hands()

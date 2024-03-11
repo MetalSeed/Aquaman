@@ -27,10 +27,10 @@ class RoomRecognizer(ImageRecognizer):
         self.windowshoter = ScreenshotUtil(self.window_title)
         self.windowshot = None
         # 颜色匹配中的比例
-        self.threshold_color_match_status = 0.01 # 花色识别中，掩码中有效像素比例
-        self.threshold_color_match_hero_turn = 0.01 # hero回合标志颜色比例
-        self.threshold_color_match_is_active = 0.01 # 是否存活颜色比例
-
+        self.threshold_color_match_status = 0.1 # 花色识别中，掩码中有效像素比例
+        self.threshold_color_match_hero_turn = 0.1 # hero回合标志颜色比例
+        self.threshold_color_match_is_active = 0.1 # 是否存活颜色比例
+        self.threshold_color_match_is_empty_seat = 0.1 # 是否有玩家比例
 
     def takeshot(self):
         self.windowshot = self.windowshoter.capture_screen()
@@ -217,6 +217,13 @@ class RoomRecognizer(ImageRecognizer):
     def is_hero_short_funds(self):
         pass
 
+    def is_empty_seat(self, abs_position):
+        croped_img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
+        result = self.color_matching(croped_img, self.color_ranges_empty_seat, self.threshold_color_match_is_empty_seat)
+        if result == 'empty_seat_color':
+            return True
+        else: 
+            return False
     # 房间状态检测
     def game_state_dectection(self):
         self.is_hero_lost_all()
@@ -238,7 +245,8 @@ class wpkRR(RoomRecognizer):
         self.threshold_color_match_poker = 0.2 # 判断花色
         self.threshold_color_match_status = 0.50 # 花色识别中，掩码中有效像素比例
         self.threshold_color_match_hero_turn = 0.50 # hero回合标志颜色比例
-        self.threshold_color_match_is_active = 0.50 # 是否存活颜色比例
+        self.threshold_color_match_is_active = 0.50 # 是有手牌颜色比例
+        self.threshold_color_match_is_empty_seat = 0.50 # 是否有玩家比例
 
         # 前后景区分度
         self.threshold_color_diff_poker_background = 30 # 判断是否有文字
@@ -288,6 +296,12 @@ class wpkRR(RoomRecognizer):
         self.color_ranges_is_active = {
             'pokerback': ([36, 25, 25], [86, 255,255]),  # 绿色
         }
+        # 空座位
+        self.color_ranges_empty_seat = {
+            'empty_seat_color': ([36, 25, 25], [86, 255,255]),  # 绿色
+        }
+
+
     def windowshot_input(self, img):
         self.windowshot = img
 
