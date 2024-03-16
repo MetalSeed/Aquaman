@@ -156,13 +156,6 @@ class RoomRecognizer(ImageRecognizer):
             return True
         else: 
             return False
-
-    def get_player_status(self, abs_position):
-        status = None
-        img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_status'])
-        # status = match_status()############
-        # 在特定平台实现，wpk 颜色+字符
-        return status
     
     def get_player_pot(self, abs_position):
         pot = self.get_number(f'P{abs_position}_pot')
@@ -258,7 +251,7 @@ class wpkRR(RoomRecognizer):
         #################
         #################
         #################
-        # 数字文字卡片的后矫正放在这里 #
+        # 数字文字卡片OCR的后矫正放在这里 #
         #################
         #################
         #################
@@ -301,7 +294,17 @@ class wpkRR(RoomRecognizer):
             'empty_seat_color': ([36, 25, 25], [86, 255,255]),  # 绿色
         }
 
-
+        # preflop: limp = 'Call', open&raise = 'Raise', fold = 'Fold', allin='All in'
+        # postflop: bet = 'Bet', raisex = 'Raise', check = 'Check', fold = 'Fold',
+        
+    def get_player_status(self, abs_position):
+        status = None
+        img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_status'])
+        # status = match_status()############
+        # status = get_string(img) # 头像部分的框用 状态框
+        # 在特定平台实现，wpk 颜色+字符
+        return status
+    
     def windowshot_input(self, img):
         self.windowshot = img
 

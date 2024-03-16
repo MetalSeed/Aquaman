@@ -17,17 +17,25 @@ from src.recognizer.nlth_platform import filled_room_config, wpkRR
 
 # 定义玩家数据结构
 class Player:
-    def __init__(self, abs_position, is_active=False, status=None, pot=None, funds=None, cards=[], id=None):
+    def __init__(self, abs_position, is_active=False, status=None, pot=None, funds=None, cards=[], id=None, quit_flag = False):
         self.abs_position = abs_position  # 玩家座位号
-        self.positon = None  # 玩家相对庄家的位置
-
-        self.is_active = is_active  # 是否仍在当前回合中       
+        self.is_active = is_active  # 是否仍在当前回合中   
+        
+        self.positon = None  # 玩家相对庄家的位置    
         self.status = status  # 玩家状态：sitting, all-in，check, call, bet, raise, fold等
         self.pot = pot # 玩家当前回合的赌注
         self.funds = funds  # 玩家堆栈大小
+        self.action_clip = {}
 
         self.cards = cards  # 玩家的私有牌
         self.id = id  # 玩家ID
+
+        # strategy部分
+        self.position_advantage = None  # 位置优势 IP OOP
+        self.range_advantage = None  # 范围优势
+        self.OD_role = None # offensive deffensive
+        self.action_tpye = None  # donk, cbet-flop, cbet-turn, cbet-river
+        self.player_type = None
 
 # 定义牌桌数据结构
 class Table:
@@ -37,34 +45,11 @@ class Table:
         self.platform = None
         self.max_players = None
         self.big_blind = None
-        self.small_blind = None   
+        self.small_blind = None  
+
         self.update_room_data()
 
         # publicly数据
-        self.total_pot = None  # 总赌池大小
-        self.last_round_pot = None  # 上一轮的赌池大小
-        self.publicly_cards = None  # 公共牌
-        self.dealer_abs_position = None  # 庄家位置
-        
-        # 玩家数据
-        self.players = [Player(abs_position=i) for i in range(self.max_players)]  # 初始化9个玩家位置        
-        
-        # hero button数据
-        self.call_value = None
-        self.bet1_value = None
-        self.bet2_value = None
-        self.bet3_value = None
-        self.bet4_value = None
-        self.bet5_value = None
-
-    def clear(self):
-        # room data
-        self.platform = None
-        self.max_players = None
-        self.big_blind = None
-        self.small_blind = None   
-
-        # publicly data
         self.total_pot = None  # 总赌池大小
         self.last_round_pot = None  # 上一轮的赌池大小
         self.publicly_cards = None  # 公共牌
@@ -129,6 +114,7 @@ class Table:
         self.updata_publicly_data()
         self.update_players_data()
         self.updata_hero_button_data()  
+        self.updata_players_positon()
         # self.undate_platyers_id()
 
     # 打包成dict,交给converter转换成round

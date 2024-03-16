@@ -21,7 +21,7 @@ rectangles = []  # 存储矩形框的坐标
 drawing = False  # 标记是否开始画图
 current_rectangle = (-1, -1, -1, -1)  # 当前矩形的坐标
 
-def draw_rectangle(event, x, y):
+def draw_rectangle(event, x, y, flags, param):
     global rectangles, drawing, current_rectangle
 
     # 鼠标左键按下开始绘制
@@ -85,7 +85,7 @@ def main(image_path):
         for idx, name in enumerate(rect_names):
             x, y = calculate_text_position(idx, start_x, start_y, column_width, max_items_per_column, height)
             cv2.putText(img_copy, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-
+        
         # 绘制已经定义的矩形框
         for idx, rect in enumerate(rectangles):
             cv2.rectangle(img_copy, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 2)
@@ -94,10 +94,10 @@ def main(image_path):
             text_position = (x + 150, y)
             cv2.putText(img_copy, f"done", text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
             # cv2.putText(img_copy, f"{rect_names[idx]}: {rect}", text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-
+        
         if current_rectangle != (-1, -1, -1, -1):
             cv2.rectangle(img_copy, (current_rectangle[0], current_rectangle[1]), (current_rectangle[2], current_rectangle[3]), (0, 0, 255), 2)
-        cv2.imshow('table_setup', img_copy)
+        cv2.imshow('get_draw_rects', img_copy)
 
         # 检查按键事件
         key = cv2.waitKey(1) & 0xFF

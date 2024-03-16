@@ -34,3 +34,9 @@
 # 平台依赖
 
 # recognizer - image_recognizer_OCR.py
+
+
+# 0. 更新rect名字
+# 1. status更新
+# 2。 更新is_active名字，和判断方法，和status交叉或者or
+ß
