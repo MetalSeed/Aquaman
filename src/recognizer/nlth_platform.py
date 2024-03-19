@@ -336,6 +336,7 @@ class wpkRR(RoomRecognizer):
                 print(f"P{abs_position}状态识别失败, 识别结果：{status_text}")
                 status = 'Error'
         else:
+            # 如果有困难 需要用到交叉数据，就定义成unknow给到 hands去更新装填
             # 判断字符串识别是不是可靠的
 
             # 如果有没有牌是可靠的

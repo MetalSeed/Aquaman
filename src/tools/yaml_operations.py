@@ -26,7 +26,7 @@ def update_nested_dict(dct, keys, value):
 # 往yaml文件写入或更新数据，value可以是值，字符串，也可以是List
 def update_or_add_to_yaml(file_path, keys, value):
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
     except FileNotFoundError:
         data = {}
@@ -35,7 +35,7 @@ def update_or_add_to_yaml(file_path, keys, value):
     action = update_nested_dict(data, keys, value)
 
     # 将更新后的数据写回YAML文件
-    with open(file_path, 'w') as file:
+    with open(file_path, 'w', encoding='utf-8') as file:
         yaml.dump(data, file, default_flow_style=False)
     
     return action
@@ -51,7 +51,7 @@ def update_or_add_to_yaml(file_path, keys, value):
 
 # key是列表，就返回列表，key是健，就返回值
 def read_value_from_yaml(file_path, key):
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf-8') as file:
         data = yaml.load(file, Loader=yaml.FullLoader)
     value = data.get(key)
     if value is not None:
@@ -71,7 +71,7 @@ def read_tuple_from_yaml(file_path, key):
 
 def fill_dict_from_yaml(config_dict, yaml_path):
     # 从YAML文件读取数据
-    with open(yaml_path, 'r') as file:
+    with open(yaml_path, 'r', encoding='utf-8') as file:
         yaml_data = yaml.load(file, Loader=yaml.FullLoader)
     
     # 遍历配置字典中的键，并尝试从YAML数据中填充值

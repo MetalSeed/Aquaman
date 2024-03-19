@@ -40,9 +40,9 @@ class ScreenshotUtil:
         window = self.window_monitor.window
         if window:
             start_time = time.time()  # 记录开始时间
-            while not self.window_monitor.find_window() or not self.window_monitor.is_window_valid():
+            while not self.window_monitor.find_window() or not self.window_monitor.window_monitor.is_window_valid():
                 """等待窗口出现并进入有效状态"""
-                print(f"Waiting for window '{self.window_title}' to become available...")
+                print(f"Waiting for window '{self.window_monitor.window_title}' to become available...")
                 if time.time() - start_time > 10:  # 超过10秒
                     print(f"Window '{self.window_monitor.window_title}' is not valid after 10 seconds.")
                     return None
