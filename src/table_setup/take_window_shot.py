@@ -47,7 +47,7 @@ def capture_windowshot(window_title):
         print(f"发生错误: {e}")
 
 # 使用示例, 获取第一个截图
-window_title = "雷电模拟器"  # 修改为你的窗口标题
+window_title = "雷电模拟器-0"  # 修改为你的窗口标题
 capture_windowshot(window_title)
 
 
