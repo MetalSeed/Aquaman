@@ -9,7 +9,7 @@
 # 识别1：   牌桌信息：上轮底池，当前底池，5张公共牌位置，hero额外信息：fold， call, raise, rb1, rb2, rb3, rb4, eb5。 共15个
 #          输   入：1.png （要求 river轮，4.png底池长，5.png底池短，6.png正常，可两人模拟）
 
-# 识别2：   玩家信息：手牌状态，行动决定，行动数字，后手筹码，头像位置。 共5x9个
+# 识别2：   玩家信息：手牌状态，行动决定，行动数字，后手筹码，头像位置。 共5x9个 !!! 头像位置后期要根据fold、allin、leave等状态重新画框
 #          输   入：2 - 10.png （对应位置存货，已行动，行动数字有偿有短）
 
 
@@ -41,26 +41,26 @@ from src.tools.yaml_operations import update_or_add_to_yaml
 # wepoker 不同的矩形框名字列表
 
 rect_names1 = [
-    "Last_Round_Pot", "Total_Pot", 
-    "Board1_rank", "Board1_suit", 
-    "Board2_rank", "Board2_suit", 
-    "Board3_rank", "Board3_suit", 
-    "Board4_rank", "Board4_suit", 
-    "Board5_rank", "Board5_suit", 
-    "Hero_card1_rank","Hero_card1_suit","Hero_card2_rank","Hero_card2_suit", 
-    "Hero_fold","Hero_bet", "Hero_call", 
+    "pot_last_round", "pot_total", 
+    "board1_rank", "board1_suit", 
+    "board2_rank", "board2_suit", 
+    "board3_rank", "board3_suit", 
+    "board4_rank", "board4_suit", 
+    "board5_rank", "board5_suit", 
+    "hero_card1_rank","hero_card1_suit","hero_card2_rank","hero_card2_suit", 
+    "hero_fold","hero_bet", "hero_call", 
     "bet1", "bet2", "bet3", "bet4", "bet5"
     ]
 
-rect_names2 = ["P0_is_active", "P0_status", "P0_pot", "P0_funds", "P0_photo"]
-rect_names3 = ["P1_is_active", "P1_status", "P1_pot", "P1_funds", "P1_photo"]
-rect_names4 = ["P2_is_active", "P2_status", "P2_pot", "P2_funds", "P2_photo"]
-rect_names5 = ["P3_is_active", "P3_status", "P3_pot", "P3_funds", "P3_photo"]
-rect_names6 = ["P4_is_active", "P4_status", "P4_pot", "P4_funds", "P4_photo"]
-rect_names7 = ["P5_is_active", "P5_status", "P5_pot", "P5_funds", "P5_photo"]
-rect_names8 = ["P6_is_active", "P6_status", "P6_pot", "P6_funds", "P6_photo"]
-rect_names9 = ["P7_is_active", "P7_status", "P7_pot", "P7_funds", "P7_photo"]
-rect_names10 = ["P8_is_active", "P8_status", "P8_pot", "P8_funds", "P8_photo"]
+rect_names2 = ["P0_have_cards", "P0_status", "P0_pot", "P0_funds", "P0_photo"]
+rect_names3 = ["P1_have_cards", "P1_status", "P1_pot", "P1_funds", "P1_photo"]
+rect_names4 = ["P2_have_cards", "P2_status", "P2_pot", "P2_funds", "P2_photo"]
+rect_names5 = ["P3_have_cards", "P3_status", "P3_pot", "P3_funds", "P3_photo"]
+rect_names6 = ["P4_have_cards", "P4_status", "P4_pot", "P4_funds", "P4_photo"]
+rect_names7 = ["P5_have_cards", "P5_status", "P5_pot", "P5_funds", "P5_photo"]
+rect_names8 = ["P6_have_cards", "P6_status", "P6_pot", "P6_funds", "P6_photo"]
+rect_names9 = ["P7_have_cards", "P7_status", "P7_pot", "P7_funds", "P7_photo"]
+rect_names10 = ["P8_have_cards", "P8_status", "P8_pot", "P8_funds", "P8_photo"]
 
 rect_names11 = ["P0_dealer"]
 rect_names12 = ["P1_dealer"]
@@ -72,7 +72,11 @@ rect_names17 = ["P6_dealer"]
 rect_names18 = ["P7_dealer"]
 rect_names19 = ["P8_dealer"]
 
-rect_names20 = ["Player_ID"]
+rect_names20 = ["Player_id", "Player_buyin"]
+
+
+button_power = {"bet1_power": 0.3, "bet2_power": 0.5, "bet3_power": 0.75, "bet4_power": 1, "bet5_power": 1.4}
+
 
 # 全局变量
 rectangles = []  # 存储矩形框的坐标
@@ -223,4 +227,9 @@ if __name__ == '__main__':
     for name, rect in zip(rect_names, rectangles):
         print(update_or_add_to_yaml(save_path, [name], rect))
 
+    # 把button_power写入到yaml文件
+    for key, value in button_power.items():
+        print(update_or_add_to_yaml(save_path, [key], value))
+
     # 把yaml文件复制到config路径
+    

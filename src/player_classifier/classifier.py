@@ -1,7 +1,8 @@
-# 模型定义 路径树
-# 场景查询
-# 场景输入 （手动）
-
+"""
+模型定义 路径树
+场景查询
+场景输入 （手动）
+"""
 
 player_type = {
     'VPIP': 0.35,
@@ -22,3 +23,4 @@ class Player_type():
 
     def get_player_type(self, id):
         pass
+

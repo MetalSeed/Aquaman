@@ -14,3 +14,10 @@ config_path:
 template_path: 
   - 'config'
   - 'template'
+
+# button 设置
+bet1_power: 0.3
+bet2_power: 0.5
+bet3_power: 0.75
+bet4_power: 1
+bet5_power: 1.4

@@ -29,7 +29,7 @@ def main(ws_input_path):
     # table.update_players_data()
 
 
-    table_info = table.get_table_dit()
+    table_info = table.get_table_dict()
     
     for key, value in table_info.items():
         if key == 'players':

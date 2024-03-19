@@ -13,13 +13,12 @@ sys.path.append(grandparent_dir)
 
 from src.recognizer.nlth_platform import filled_room_config, wpkRR
 
-# from config import load_config
 
 # 定义玩家数据结构
 class Player:
-    def __init__(self, abs_position, is_active=False, status=None, pot=None, funds=None, cards=[], id=None, quit_flag = False):
+    def __init__(self, abs_position, have_cards=False, status=None, pot=None, funds=None, cards=[], id=None, quit_flag = False):
         self.abs_position = abs_position  # 玩家座位号
-        self.is_active = is_active  # 是否仍在当前回合中   
+        self.have_cards = have_cards  # 是否仍在当前回合中   
         
         self.positon = None  # 玩家相对庄家的位置    
         self.status = status  # 玩家状态：sitting, all-in，check, call, bet, raise, fold等
@@ -52,7 +51,7 @@ class Table:
         # publicly数据
         self.total_pot = None  # 总赌池大小
         self.last_round_pot = None  # 上一轮的赌池大小
-        self.publicly_cards = None  # 公共牌
+        self.public_cards = None  # 公共牌
         self.dealer_abs_position = None  # 庄家位置
         
         # 玩家数据
@@ -74,12 +73,19 @@ class Table:
         self.small_blind = filled_room_config['small_blind']
     
     def updata_publicly_data(self):
-        self.total_pot = self.prr.get_total_pot()
-        self.last_round_pot = self.prr.get_last_round_pot()
+        self.pot_total = self.prr.get_total_pot()
+        self.pot_last_round = self.prr.get_last_round_pot()
         self.dealer_abs_position = self.prr.get_dealer_abs_position()
-        self.publicly_cards = self.prr.get_publicly_cards()
+        self.public_cards = self.prr.get_public_cards()
 
-    def updata_hero_button_data(self):
+    def update_hero_button_power(self):
+        self.bet1_value = filled_room_config['bet1_power']
+        self.bet2_value = filled_room_config['bet2_power']
+        self.bet3_value = filled_room_config['bet3_power']
+        self.bet4_value = filled_room_config['bet4_power']
+        self.bet5_value = filled_room_config['bet5_power']
+
+    def update_hero_button_data(self):
         self.call_value = self.prr.get_call_value()
         self.bet1_value = self.prr.get_bet1_value()
         self.bet2_value = self.prr.get_bet2_value()
@@ -91,11 +97,11 @@ class Table:
     def update_players_data(self):
         for i in range(self.max_players):
             if i == 0:
-                self.players[i].is_active = True
+                self.players[i].have_cards = True
                 self.players[i].status = 'tbd'  # 'tbd'表示to be determined          
                 self.players[i].cards = self.prr.get_hero_cards()
             else:
-                self.players[i].is_active = self.prr.get_is_active(i)
+                self.players[i].have_cards = self.prr.get_have_cards(i)
                 self.players[i].status = self.prr.get_player_status(i)
             self.players[i].pot = self.prr.get_player_pot(i)
             self.players[i].funds = self.prr.get_player_funds(i)
@@ -113,7 +119,8 @@ class Table:
     def update_table_info(self):
         self.updata_publicly_data()
         self.update_players_data()
-        self.updata_hero_button_data()  
+        # self.update_hero_button_data()  
+        self.update_hero_button_power()  
         self.updata_players_positon()
         # self.undate_platyers_id()
 
@@ -128,16 +135,16 @@ class Table:
             "small_blind": self.small_blind,
 
             #publicly数据
-            "total_pot": self.total_pot,
-            "last_round_pot": self.last_round_pot,
-            "publicly_cards": self.publicly_cards,
+            "pot_total": self.pot_total,
+            "pot_last_round": self.pot_last_round,
+            "public_cards": self.public_cards,
             "dealer_abs_position": self.dealer_abs_position,
             
             #玩家数据
             "players": [{ 
                         "abs_position": player.abs_position,
                         "position": player.position,
-                        "is_active": player.is_active, 
+                        "have_cards": player.have_cards, 
                         "status": player.status, 
                         "pot": player.pot, 
                         "funds": player.funds, 

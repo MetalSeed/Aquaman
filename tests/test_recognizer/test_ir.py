@@ -78,9 +78,11 @@ class Test_recognizer(Table):
      
     def get_croped_img(self, region_name=None):
         img = self.testimg
+        global region_global
         # Crop the image to the specified region
         if region_name is not None:
             region = filled_room_rects[region_name]
+            if region_global: region = region_global # 全局替换
             cropped_img = img.crop((region[0], region[1], region[2], region[3]))
         else:
             cropped_img = img
@@ -125,7 +127,11 @@ class Test_recognizer(Table):
         save_path = get_file_full_name(f"{region_name}.png", 'data', 'test')
         cropped_img.save(save_path)
 
+
+region_global = []
 def main(file_path):
+    global region_global
+
     img_array = cv2.imread(file_path)
     windowshot = Image.fromarray(img_array)
 

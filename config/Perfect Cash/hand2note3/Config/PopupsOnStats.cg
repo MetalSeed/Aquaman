@@ -1,0 +1,12 @@
+{
+  "MinHandsCountToGroup": 5,
+  "MaxHandsCountToGroup": 10000,
+  "HandsPerGroup": 3,
+  "IsDescriptionVisible": true,
+  "IsPostflopDiagramExpanded": true,
+  "IsPostflopHandsExpanded": true,
+  "IsPreflopActionProfitDetailsExpanded": false,
+  "IsPostflopActionProfitDetailsExpanded": false,
+  "IsBoardsExpanded": true,
+  "IsBetSizingsExpanded": true
+}

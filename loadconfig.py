@@ -2,7 +2,7 @@ import os
 import sys
 
 from src.tools.yaml_operations import fill_dict_from_yaml
-from src.table_setup.table_setup import rect_names1, rect_names2, rect_names3, rect_names4, rect_names5, rect_names6, rect_names7, rect_names8, rect_names9, rect_names10, rect_names11, rect_names12, rect_names13, rect_names14, rect_names15, rect_names16, rect_names17, rect_names18, rect_names19, rect_names20
+from src.table_setup.table_setup import rect_names1, rect_names2, rect_names3, rect_names4, rect_names5, rect_names6, rect_names7, rect_names8, rect_names9, rect_names10, rect_names11, rect_names12, rect_names13, rect_names14, rect_names15, rect_names16, rect_names17, rect_names18, rect_names19, rect_names20, button_power
 
 
 # config
@@ -20,6 +20,11 @@ def load_config():
         'max_players': None,
         'big_blind': None,
         'small_blind': None,
+        'bet1_power': None,
+        'bet2_power': None,
+        'bet3_power': None,
+        'bet4_power': None,
+        'bet5_power': None,
     }
     script_dir = os.path.dirname(__file__)
     room_config_yaml = os.path.join(script_dir, 'config', 'room_config.yaml')
@@ -31,6 +36,7 @@ def load_config():
     keylist = []
     for i in range(1, 21):
         keylist.extend(eval(f'rect_names{i}'))
+
     for key in keylist:
         rects_dict[key] = None
 

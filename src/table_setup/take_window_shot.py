@@ -19,6 +19,7 @@ sys.path.append(grandparent_dir)
 
 from src.tools.aqm_utils import get_file_full_name
 
+# 每隔2s截图一张
 def capture_windowshot(window_title):
     try:
         # 查找并获取窗口
@@ -39,7 +40,7 @@ def capture_windowshot(window_title):
                 print(f"截图已保存至：{filepath}")
 
                 # 等待5秒再次截图
-                time.sleep(5)
+                time.sleep(2)
         else:
             print("未找到指定的窗口。")
     except Exception as e:

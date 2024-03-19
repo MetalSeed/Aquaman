@@ -59,6 +59,7 @@ def main(window_title, template, action_region, table_region):
             print("Failed to capture screenshot.")
             time.sleep(1)
             continue
+        # color match
         if screenshot_util.match_template_in_screenshot(windowshot, template, action_region, 0.9):
             print("Template found in screenshot.")
 
