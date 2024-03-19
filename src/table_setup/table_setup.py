@@ -24,6 +24,7 @@
 
 import os
 import sys
+import time
 import cv2
 # 获取当前脚本文件的绝对路径
 script_path = os.path.abspath(__file__)
@@ -159,7 +160,7 @@ def main(image_number, image_path):
     start_y = 20  # 从顶部开始显示文本
     column_width = 200  # 每列的宽度
     max_items_per_column = height // 30  # 根据图像高度和文本高度计算每列最大项目数
-
+    start_time = None
     while True:
         img_copy = extended_img.copy()
 
@@ -184,11 +185,20 @@ def main(image_number, image_path):
 
         # 检查按键事件
         key = cv2.waitKey(1) & 0xFF
-        if key == ord('q') or len(rectangles) >= len(rect_names):
+        if key == ord('q'):
             break
         elif key == ord('c') and rectangles:
             # 按 'c' 删除最后一个矩形框
             rectangles.pop()
+        elif len(rectangles) == len(rect_names):
+            if not start_time: start_time = time.time()
+            else:
+                if time.time() - start_time > 300:  # 300 seconds = 5 minutes
+                    break
+        elif len(rectangles) > len(rect_names):
+            rectangles.pop()
+            break
+
 
     cv2.destroyAllWindows()
     for idx, rect in enumerate(rectangles):

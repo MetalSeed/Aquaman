@@ -1,6 +1,9 @@
+# 画矩形获得坐标
 import os
 import sys
+import time
 import cv2
+
 # 获取当前脚本文件的绝对路径
 script_path = os.path.abspath(__file__)
 # 获取当前脚本所在的目录（tools）
@@ -13,7 +16,7 @@ sys.path.append(grandparent_dir)
 from src.tools.aqm_utils import get_file_full_name
 
 rect_names = [
-    "rect1", "rect2", 'rect3', 'rect4', 'rect5', 'rect6', 'rect7', 'rect8', 'rect9', 'rect10'
+    "rect1", "rect2", "rect3", "rect4", "rect5"
     ]
 
 # 全局变量
@@ -77,7 +80,7 @@ def main(image_path):
     start_y = 20  # 从顶部开始显示文本
     column_width = 200  # 每列的宽度
     max_items_per_column = height // 30  # 根据图像高度和文本高度计算每列最大项目数
-
+    start_time = None
     while True:
         img_copy = extended_img.copy()
 
@@ -98,14 +101,24 @@ def main(image_path):
         if current_rectangle != (-1, -1, -1, -1):
             cv2.rectangle(img_copy, (current_rectangle[0], current_rectangle[1]), (current_rectangle[2], current_rectangle[3]), (0, 0, 255), 2)
         cv2.imshow('get_draw_rects', img_copy)
-
+        
         # 检查按键事件
         key = cv2.waitKey(1) & 0xFF
-        if key == ord('q') or len(rectangles) >= len(rect_names):
+        if key == ord('q'):
             break
         elif key == ord('c') and rectangles:
             # 按 'c' 删除最后一个矩形框
             rectangles.pop()
+        elif len(rectangles) == len(rect_names):
+            if not start_time: start_time = time.time()
+            else:
+                if time.time() - start_time > 300:  # 300 seconds = 5 minutes
+                    break
+        elif len(rectangles) > len(rect_names):
+            rectangles.pop()
+            break
+
+
     
     cv2.destroyAllWindows()
     for idx, rect in enumerate(rectangles):
@@ -114,7 +127,8 @@ def main(image_path):
 
 if __name__ == '__main__':
     # 提示用户输入图片编号
-    image_number = int(input("请输入图片编号: "))
+    # image_number = (input("请输入图片编号: "))
+    image_number = 'call'
     
     # 构造文件名和读取路径
     image_name = f"{image_number}.png"  

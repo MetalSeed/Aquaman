@@ -81,8 +81,9 @@ class Test_recognizer(Table):
         global region_global
         # Crop the image to the specified region
         if region_name is not None:
-            region = filled_room_rects[region_name]
-            if region_global: region = region_global # 全局替换
+            if region_name == 'global':
+                region = region_global # 全局替换
+            else: region = filled_room_rects[region_name]
             cropped_img = img.crop((region[0], region[1], region[2], region[3]))
         else:
             cropped_img = img
@@ -127,33 +128,50 @@ class Test_recognizer(Table):
         save_path = get_file_full_name(f"{region_name}.png", 'data', 'test')
         cropped_img.save(save_path)
 
+    def get_global_region_color(self, save_flag = False, k=3):
+        cropped_img = self.get_croped_img('global')
+        if save_flag:
+            save_path = get_file_full_name(f"global.png", 'data', 'test')
+            cropped_img.save(save_path)
+        self.get_color_ranges('global', k)
+        return
 
-region_global = []
 def main(file_path):
     global region_global
-
-    img_array = cv2.imread(file_path)
-    windowshot = Image.fromarray(img_array)
+    windowshot = Image.open(file_path)
 
     TR = Test_recognizer()
     TR.set_testimg(windowshot)
 
-    # 测试内容 如果是windowshot，要输入矩形标题，如果是icon，不用输入标题
+    # 测试内容 如果是windowshot，要输入矩形标题，如果是croped_img文件，不用输入标题
     # TR.get_color_ranges('Total_Pot', 3)
-    TR.get_color_match(TR.prr.color_ranges_pocker, TR.prr.threshold_color_match_poker, 'Hero_card1_rank')
-    TR.get_number('Total_Pot')
-    TR.get_card('Board2')
+    # TR.get_color_match(TR.prr.color_ranges_pocker, TR.prr.threshold_color_match_poker, 'hero_card1_rank')
+    # TR.get_number('pot_total')
+    # TR.get_card('board2')
 
     # 裁剪保存对应的矩形区域
-    TR.crop_save('Hero_card1_rank')
+    # TR.crop_save('hero_card1_rank')
 
+    TR.get_global_region_color(True)
+
+
+#pb
+rect1 = [288, 191, 312, 212]
+rect2 = [505, 281, 528, 303]
+rect3 = [505, 445, 528, 466]
+rect4 = [15, 447, 36, 467]
+rect5 = [254, 186, 273, 212] # 无效背面
+
+current_rectangle = (118, 790, 166, 836)
+
+region_global = current_rectangle
 
 # 使用示例
 if __name__ == '__main__':
     icon_path = os.path.join(template_dir, 'is_hero_turn.png')
-    wshot_path = get_file_full_name('ws1.png', 'data', 'test')
+    wshot_path = get_file_full_name('100.png', 'data', 'test')
     
     file_path = wshot_path
     main(file_path)
 
-# 重新setup的时候，把rects_name规范一下，全部小写
+# 修改成鼠标画框识别OCR

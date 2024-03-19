@@ -7,6 +7,7 @@ script_path = os.path.abspath(__file__)
 # 获取当前脚本所在的目录（tools）
 script_dir = os.path.dirname(script_path)
 parent_dir = os.path.dirname(script_dir)
+parent_dir = os.path.dirname(parent_dir)
 # 降Aquaman子目录添加到sys.path
 sys.path.append(parent_dir)
 
@@ -44,13 +45,13 @@ if __name__ == '__main__':
     room_yaml_path = get_file_full_name(room_yaml, 'data', 'input', 'table_setup')
     
     # 读取路径
-    image_number = 1
+    image_number = input("Please enter the image number: ")
     image_name = f"{image_number}.png"  
-    image_path = get_file_full_name(image_name, 'data', 'testdata')
+    image_path = get_file_full_name(image_name, 'data', 'test')
 
     # 保存路径
     filename = f"{image_number}_new.png"
-    save_path = get_file_full_name(filename, 'data', 'testdata')
+    save_path = get_file_full_name(filename, 'data', 'test')
 
     
     main(image_path, save_path, room_yaml_path)

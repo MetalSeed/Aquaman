@@ -68,7 +68,7 @@ class RoomRecognizer(ImageRecognizer):
     def is_hero_turn_color_matching(self):
         croped_img = self.windowshot.crop(filled_room_rects['hero_fold'])
         result = self.color_matching(croped_img, self.color_ranges_hero_turn, self.threshold_color_match_hero_turn)
-        if result == 'red':
+        if result == 'red1' or result == 'red2':
             return True
         else:
             print("不是hero的回合")
@@ -82,7 +82,7 @@ class RoomRecognizer(ImageRecognizer):
             return True
         else:
             return False
-    def is_hero_turn(self, mode=1): # 使用模板匹配
+    def is_hero_turn(self, mode=2): # 使用模板匹配
         if mode == 1: # mode 1: 模板匹配
             result = self.is_hero_turn_tempate_matching()
         elif mode == 2: # mode 2: 颜色匹配
@@ -238,11 +238,12 @@ class RoomRecognizer(ImageRecognizer):
     def is_empty_seat(self, abs_position):
         croped_img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
         result = self.color_matching(croped_img, self.color_ranges_empty_seat, self.threshold_color_match_is_empty_seat)
-        if result == 'empty_seat_color':
+        if result == 'empty':
             return True
         else: 
             print(f"P{abs_position}没有玩家")
             return False
+        
     # 房间状态检测
     def game_state_dectection(self):
         self.is_hero_lost_all()
@@ -263,8 +264,8 @@ class wpkRR(RoomRecognizer):
         # 颜色匹配 颜色占比 阈值
         self.threshold_color_match_poker = 0.2 # 判断花色
         self.threshold_color_match_status = 0.50 # 花色识别中，掩码中有效像素比例
-        self.threshold_color_match_hero_turn = 0.50 # hero回合标志颜色比例
-        self.threshold_color_match_have_cards = 0.50 # 是有手牌颜色比例
+        self.threshold_color_match_hero_turn = 0.3 # hero回合标志颜色比例
+        self.threshold_color_match_have_cards = 0.3 # 是有手牌颜色比例
         self.threshold_color_match_is_empty_seat = 0.50 # 是否有玩家比例
 
         # 前后景区分度
@@ -277,44 +278,33 @@ class wpkRR(RoomRecognizer):
         #############
         # 平台颜色范围#
         #############
-
-        # 定义四种花色的HSV颜色范围
+        
+        # 定义四种花色的HSV颜色范围 0.2
         self.color_ranges_pocker = {
-            'c': ([36, 25, 25], [86, 255,255]),  # 绿色 club
-            'h': ([170, 100, 50], [180, 255, 255]),  # 红色 heart
-            's': ([0, 0, 0], [180, 255, 30]),     # 黑色 spade
-            'd': ([94, 80, 2], [126, 255, 255]),  # 蓝色 diamond
+            'c': ([56, 180, 150], [58, 241, 166]),  # 绿色 club
+            'h': ([121, 160, 231], [122, 251, 239]),  # 红色 heart
+            's': ([0, 0, 0],[60, 85, 28]),     # 黑色 spade
+            'd': ([ 13, 184, 189], [ 15, 255, 206]),  # 蓝色 diamond
         }
 
-        # 定义状态的HSV颜色范围
+        # 定义状态的HSV颜色范围 0.5
         self.color_ranges_status = {
-            'b': ([36, 25, 25], [86, 255,255]),  # 绿色 bet
-            'r': ([0, 150, 50], [10, 255, 255]),  # 红色 raise
-            'x': ([0, 0, 0], [180, 255, 30]),     # 黑色 check
-            'c': ([94, 80, 2], [126, 255, 255]),  # 蓝色 call
-            'f': ([94, 80, 2], [126, 255, 255]),  # 蓝色 fold
+            'bc':  ([ 13, 168, 214], [ 17, 227, 239]), # bet call
+            'r': ([105, 127,  66], [110, 237, 239]), #raise orange
+            'x': ([ 37, 146,  56], [ 43, 245, 207]), # check green
         }
-
-        # 定义状态的HSV颜色范围
-        self.color_ranges_other = {
-            'b': ([36, 25, 25], [86, 255,255]),  # 绿色 bet
-            'r': ([0, 150, 50], [10, 255, 255]),  # 红色 raise
-            'x': ([0, 0, 0], [180, 255, 30]),     # 黑色 check
-            'c': ([94, 80, 2], [126, 255, 255]),  # 蓝色 call
-            'f': ([94, 80, 2], [126, 255, 255]),  # 蓝色 fold
-        }
-        # 定义状态的HSV颜色范围
+        # 定义状态的HSV颜色范围 1or2 > 0.3
         self.color_ranges_hero_turn = {
-            'red1': ([0, 150, 50], [10, 255, 255]),  # 亮红色
-            'red2': ([0, 0, 0], [180, 255, 30]),     # 暗红色
+            'red1':([122, 126, 222], [125, 211, 239]), # 亮红色
+            'red2':([122, 95, 132], [126, 211, 148]),  # 暗红色
         }
-        # 定义状态的HSV颜色范围
+        # 定义状态的HSV颜色范围 0.3
         self.color_ranges_have_cards = {
-            'pokerback': ([36, 25, 25], [86, 255,255]),  # 绿色
+            'pokerback': ([117,  67, 198], [126, 135, 222]),  #红色
         }
-        # 空座位
+        # 空座位 0.5空，0.3fold
         self.color_ranges_empty_seat = {
-            'empty': ([36, 25, 25], [86, 255,255]),  # 绿色
+            'empty': ([150,   3,  33], [150,  39, 107]),  # 黑色
         }
 
         #################
@@ -330,22 +320,47 @@ class wpkRR(RoomRecognizer):
     def get_player_status(self, abs_position):
         status = None
         croped_img_status = self.windowshot.crop(filled_room_rects[f'P{abs_position}_status'])
-        status_color = self.color_matching(croped_img_status, self.color_ranges_have_cards, self.threshold_color_match_have_cards)
+        
         status_text = self.recognize_string(croped_img_status) # correct函数放在这里
-
-        if status_color == status_text:
-            status = status_color
+        status_color = self.color_matching(croped_img_status, self.color_ranges_status, self.threshold_color_match_status)
+        if status_color == 'r':
+            status = 'Raise'
+        elif status_color == 'x':
+            status = 'Check'
+        elif status_color == 'bc':
+            if status_text == 'Bet':
+                status = 'Bet'
+            elif status_text == 'Call':
+                status = 'Call'
+            else:
+                print(f"P{abs_position}状态识别失败, 识别结果：{status_text}")
+                status = 'Error'
         else:
-            croped_img_photo = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
-            
-            photo_color = self.color_matching(croped_img_photo, self.color_ranges_empty_seat, self.threshold_color_match_is_empty_seat)
-            if photo_color == 'empty': return 'Empty'
+            # 判断字符串识别是不是可靠的
 
+            # 如果有没有牌是可靠的
+            # 判断是不是active
+                # 不是allin就是TBD
+            # 否则就是fold或者waiting等，只需要判断有没有fold字符串就行
+
+            # 如果有没有牌不可靠
+            # 判断是不是待行动
+                # 在1-dealer之间，有funds，头像彩色，有手牌
+            croped_img_photo = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
+            photo_color = self.color_matching(croped_img_photo, self.color_ranges_empty_seat, self.threshold_color_match_is_empty_seat)
             photo_text = self.recognize_string(croped_img_photo) # correct函数放在这里
-            if photo_text == 'Fold':
-                status = 'Fold'
-            elif photo_text == 'All in':
+            # 判断是不是all in
+                # have card, funds = 0, pot > 0
+            if photo_text == 'All in':
                 status = 'All in'
+            # 判断是不是fold
+                # not have card or have funds&pot<lastraise, fold color
+            elif photo_text == 'Fold':
+                status = 'Fold'
+            # 判断是不是空位
+            elif photo_color == 'empty': 
+                status = 'Empty'
+            # 判断是不是等待
             elif photo_text in ['Waiting', 'Sitting']:
                 status = 'Waiting'
             else:

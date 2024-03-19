@@ -20,8 +20,7 @@ from src.tools.aqm_utils import get_file_full_name
 def main(ws_input_path):
     table = Table()
     
-    windowshot_numpy = cv2.imread(ws_input_path)
-    windowshot_pil = Image.fromarray(windowshot_numpy)
+    windowshot_pil = Image.open(ws_input_path)
     table.prr.windowshot_input(windowshot_pil)
 
     # 更新数据

@@ -17,7 +17,7 @@ sys.path.append(grandparent_dir)
 
 
 from src.tools.aqm_utils import get_file_full_name
-
+from src.recognizer.nlth_table import Table
 from src.tools.screen_operations import ScreenshotUtil
 
 def same_images_in_region(image1, image2, region=None, threshold=1):
@@ -49,38 +49,39 @@ def same_images_in_region(image1, image2, region=None, threshold=1):
     score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
     return score >= threshold
 
-def main(window_title, template, action_region, table_region):
+def main(window_title, action_region, table_region):
     last_screenshot = None
     screenshot_util = ScreenshotUtil(window_title)
     
+    table = Table()
+
     while True:
         windowshot = screenshot_util.capture_screen()
         if windowshot is None:
             print("Failed to capture screenshot.")
             time.sleep(1)
             continue
-        # color match
-        if screenshot_util.match_template_in_screenshot(windowshot, template, action_region, 0.9):
-            print("Template found in screenshot.")
+
+        croped_img = windowshot.crop(action_region)
+        result = table.color_matching(croped_img, table.color_ranges_hero_turn, table.threshold_color_match_hero_turn)
+        if result == 'red1' or result == 'red2':
+            print("is hero turn.")
 
             if last_screenshot and same_images_in_region(last_screenshot, windowshot, table_region):
                 print("Screenshots are similar; not saving.")
             else:
                 now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+                # save path #
                 save_path = get_file_full_name(f"{now}.png", 'data', 'output', 'tables_collector')
                 screenshot_util.save_screenshot(windowshot, save_path)
                 print(f"Screenshot saved: {save_path}")
                 last_screenshot = windowshot
         else:
-            print("Template not found in screenshot.")
+            print("hero turn color not matched.")
         time.sleep(1)
 
 if __name__ == "__main__":
     window_title = "雷电模拟器-1"
-    action_region = (100, 801, 183, 869)
+    action_region = (117, 790, 166, 838)
     table_region = (128, 259, 408, 556)
-
-    icon_fold_path = get_file_full_name('fold.png', 'data', 'input', 'tables_collector')
-    template = cv2.imread(icon_fold_path)
-    
-    main(window_title, template, action_region, table_region)
+    main(window_title, action_region, table_region)
