@@ -81,7 +81,7 @@ def main(window_title, action_region, table_region):
         time.sleep(1)
 
 if __name__ == "__main__":
-    window_title = "雷电模拟器-1"
+    window_title = "雷电模拟器-3"
     action_region = (117, 790, 166, 838)
     table_region = (128, 259, 408, 556)
     main(window_title, action_region, table_region)
