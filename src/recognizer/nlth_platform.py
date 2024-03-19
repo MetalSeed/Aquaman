@@ -68,7 +68,7 @@ class RoomRecognizer(ImageRecognizer):
     def is_hero_turn_color_matching(self):
         croped_img = self.windowshot.crop(filled_room_rects['hero_fold'])
         result = self.color_matching(croped_img, self.color_ranges_hero_turn, self.threshold_color_match_hero_turn)
-        if result == 'red1' or result == 'red2':
+        if result == 'red':
             return True
         else:
             print("不是hero的回合")

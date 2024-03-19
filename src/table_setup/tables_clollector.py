@@ -64,7 +64,7 @@ def main(window_title, action_region, table_region):
 
         croped_img = windowshot.crop(action_region)
         result = table.prr.color_matching(croped_img, table.prr.color_ranges_hero_turn, table.prr.threshold_color_match_hero_turn)
-        if result == 'red1' or result == 'red2':
+        if result == 'red':
             print("is hero turn.")
 
             if last_screenshot and same_images_in_region(last_screenshot, windowshot, table_region):
