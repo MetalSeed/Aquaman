@@ -18,6 +18,8 @@ grandparent_dir = os.path.dirname(parent_dir)
 sys.path.append(grandparent_dir)
 
 from src.tools.aqm_utils import get_file_full_name
+from src.recognizer.image_recognizer import ImageRecognizer
+IRtool = ImageRecognizer()
 
 # 初始化全局变量
 rects = []  # 用于存储用户绘制的所有矩形
@@ -84,23 +86,6 @@ def find_dominant_colors_and_ranges_in_hsv(cropped_img, k=3):
     # 返回排序后的颜色、占比和颜色范围
     return sorted_colors_hsv, sorted_ratios, sorted_color_ranges
 
-def process_rect(img, rect):
-    # 输出矩形的坐标，按照指定的格式
-    print(f"current_rectangle = ({rect[0][0]}, {rect[0][1]}, {rect[1][0]}, {rect[1][1]})")
-
-    global target_color, windowshot
-    # 从全局图像中裁剪出矩形区域
-    cropped_img = windowshot.crop((rect[0][0], rect[0][1], rect[1][0], rect[1][1]))
-    # 输出目标颜色占比
-    test_color_ratio(cropped_img, rect, target_color)
-
-    # 获取颜色信息
-    dominant_colors_hsv, sorted_ratios, sorted_color_ranges = find_dominant_colors_and_ranges_in_hsv(cropped_img)
-
-    # 输出颜色信息
-    for color_hsv, ratio, color_range in zip(dominant_colors_hsv, sorted_ratios, sorted_color_ranges):
-        print(f"Color (HSV): {color_hsv}, Ratio: {ratio:.2f}, Range: {color_range}")
-
 def process_image(file_path):
     global img, windowshot
     windowshot = Image.open(file_path)
@@ -150,6 +135,29 @@ def test_color_ratio(croped_img, rect, color_range):
 
     return color_ratio
 
+
+def process_rect(img, rect):
+    # 输出矩形的坐标，按照指定的格式
+    print(f"current_rectangle = ({rect[0][0]}, {rect[0][1]}, {rect[1][0]}, {rect[1][1]})")
+
+    global target_color, windowshot
+    # 从全局图像中裁剪出矩形区域
+    cropped_img = windowshot.crop((rect[0][0], rect[0][1], rect[1][0], rect[1][1]))
+    # 输出OCR识别结果
+    words = IRtool.recognize_string(cropped_img)
+    txt = IRtool.recognize_black_digits(cropped_img)
+    print(f"OCR Result: {txt}")
+    # 输出目标颜色占比
+    test_color_ratio(cropped_img, rect, target_color)
+
+    # 获取颜色信息
+    dominant_colors_hsv, sorted_ratios, sorted_color_ranges = find_dominant_colors_and_ranges_in_hsv(cropped_img)
+
+    # 输出颜色信息
+    for color_hsv, ratio, color_range in zip(dominant_colors_hsv, sorted_ratios, sorted_color_ranges):
+        print(f"Color (HSV): {color_hsv}, Ratio: {ratio:.2f}, Range: {color_range}")
+
+
 red1 = {
         'red1': ([122, 126, 222], [125, 211, 239]), 
     }
@@ -195,7 +203,7 @@ target_color = heart
 
 if __name__ == "__main__":
     # file_name = input("请输入文件名: ")
-    file_name = 'call'
+    file_name = '211'
     
     img_path = f"{file_name}.png"
     file_path = get_file_full_name(img_path, 'data', 'test')

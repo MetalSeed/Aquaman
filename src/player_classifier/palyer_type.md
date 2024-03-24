@@ -44,4 +44,57 @@ flop/turn/river,XR与R频率，对应牌力
 每种牌面的行动频率，尺度与牌力
 
 
+
+WTSD
+    表征弃牌率。作为防守方比较有意义。高的话，放心打价值，没牌就过牌。（注意有部分AF高所以WTSD低）
+        F   T   R
+    AF
+        F   T   R
+    WTSD
+W$SD
+    表征是不是实牌,river bet和flop raise, turn raise, river raise意义重大
+WWSF, WWST, WWSR won when saw各条街往后的胜率
+
+    
+HUD
+    F   T   R
+W$SD（实牌）
+AGG
+WTSD(铁头)
+WWSx
+AF
+（进攻的WTSD和防守时的WTSD是不一样的）
+
+
+当前行动线胜率
+    WonHand, Went to ShowDown, Won At ShowDown
+3B
+FlopB
+RiveXR
 """
+
+
+不同牌面，不同攻守状态（行动线），各条街的AF WTSD WWSD WWSF
+
+LaoDingHUD
+https://zhuanlan.zhihu.com/p/362856150
+
+
+# Aqm HUD
+Bange nickname hands 
+VPIP  PFR  3B F3B 4B
+      Flop Trun Rvier RB 1+ 1+Allin
+WWSD
+WWSx
+AGG
+WTSD
+      XR   BR   R+B FR TR RR
+WWSD
+WWSx
+AGG
+WTSD
+
+CB    Flop Turn River XR XF FR
+pub
++pub
+-pub

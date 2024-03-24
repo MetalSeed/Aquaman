@@ -1,9 +1,22 @@
 # shoter & 平台属性层
 import os
+import re
 import sys
 import time
 import cv2
 import numpy as np
+
+import logging
+# 配置日志格式，包括时间、日志级别、文件名、所处函数名、所在行数和消息
+# 使用括号将格式字符串分成多行，以提高可读性
+logging.basicConfig(format=(
+    '%(asctime)s - %(levelname)s - '
+    '[%(filename)s - %(funcName)s - Line %(lineno)d]: '
+    '%(message)s'
+), level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # 获取当前脚本文件的绝对路径
 script_path = os.path.abspath(__file__)
@@ -13,6 +26,7 @@ parent_dir = os.path.dirname(script_dir)
 grandparent_dir = os.path.dirname(parent_dir)
 # 降Aquaman子目录添加到sys.path
 sys.path.append(grandparent_dir)
+
 
 from src.recognizer.image_recognizer import ImageRecognizer
 from src.tools.screen_operations import ScreenshotUtil
@@ -27,7 +41,7 @@ class RoomRecognizer(ImageRecognizer):
         self.windowshoter = ScreenshotUtil(self.window_title)
         self.windowshot = None
         # 颜色匹配中的比例
-        self.threshold_color_match_status = 0.1 # 花色识别中，掩码中有效像素比例
+        self.threshold_color_match_decision = 0.1 # 花色识别中，掩码中有效像素比例
         self.threshold_color_match_hero_turn = 0.1 # hero回合标志颜色比例
         self.threshold_color_match_have_cards = 0.1 # 是否存活颜色比例
         self.threshold_color_match_is_empty_seat = 0.1 # 是否有玩家比例
@@ -71,7 +85,7 @@ class RoomRecognizer(ImageRecognizer):
         if result == 'red':
             return True
         else:
-            print("不是hero的回合")
+            logger.debug("不是hero的回合")
             return False
     
     def is_hero_turn_tempate_matching(self):
@@ -128,45 +142,44 @@ class RoomRecognizer(ImageRecognizer):
             if poker:
                 public_cards.append(poker)
             else:
-                print(f'公共牌{i+1}不存在')
+                logger.info(f'公共牌{i+1}不存在')
                 break
         return public_cards
     
     def get_hero_cards(self):
         hero_cards = []
-        img_rank = None
-        img_suit = None
-        img_rank = self.windowshot.crop(filled_room_rects['hero_card1_rank'])
-        img_suit = self.windowshot.crop(filled_room_rects['hero_card1_suit'])
-        poker = self.recognize_poker_card(img_rank, img_suit)
-        if poker:
-            hero_cards.append(poker)
-        img_rank = self.windowshot.crop(filled_room_rects['hero_card2_rank'])
-        img_suit = self.windowshot.crop(filled_room_rects['hero_card2_suit'])
-        poker = self.recognize_poker_card(img_rank, img_suit)
-        if poker:
-            hero_cards.append(poker)
-        else:
-            print("识别hero牌失败")
+        # 定义两张英雄卡牌的键名
+        card_keys = [('hero_card1_rank', 'hero_card1_suit'), ('hero_card2_rank', 'hero_card2_suit')]
+        
+        for rank_key, suit_key in card_keys:
+            img_rank = self.windowshot.crop(filled_room_rects[rank_key])
+            img_suit = self.windowshot.crop(filled_room_rects[suit_key])
+            poker = self.recognize_poker_card(img_rank, img_suit)
+            if poker:
+                hero_cards.append(poker)
+            else:
+                logger.error("识别hero牌失败")
         return hero_cards
-
+    
     def get_have_cards(self, abs_position):
         croped_img = self.windowshot.crop(filled_room_rects[f'P{abs_position}_have_cards'])
         result = self.color_matching(croped_img, self.color_ranges_have_cards, self.threshold_color_match_have_cards)
         if result == 'pokerback':
             return True
         else: 
-            print(f"P{abs_position}没有手牌")
+            logger.debug(f"P{abs_position}没有手牌")
             return False
     
     def get_player_pot(self, abs_position):
         pot = self.get_number(f'P{abs_position}_pot')
-        if pot is None: pot = 0
+        if pot is None: 
+            logger.debug(f"池底识别结果{pot}")
         return pot
     
     def get_player_funds(self, abs_position):
         funds = self.get_number(f'P{abs_position}_funds')
-        if funds is None: funds = 0
+        if funds is None: 
+            logger.debug(f"P{abs_position}资金识别结果 None")
         return funds
 
     def get_player_id(self, abs_position):
@@ -176,20 +189,9 @@ class RoomRecognizer(ImageRecognizer):
     def get_call_value(self):
         return self.get_number('hero_call')
 
-    def get_bet1_value(self):
-        return self.get_number('bet1')
-
-    def get_bet2_value(self):
-        return self.get_number('bet2')
-    
-    def get_bet3_value(self):
-        return self.get_number('bet3')
-    
-    def get_bet4_value(self):
-        return self.get_number('bet4')
-    
-    def get_bet5_value(self):
-        return self.get_number('bet5')
+    def get_betX_balue(self, bet_level):
+        bet_number = f'bet{bet_level}'
+        return self.get_number(bet_number)
 
     def get_coordinates(self, key):
         x = int((filled_room_rects[key][0] + filled_room_rects[key][2]) / 2)
@@ -263,7 +265,7 @@ class wpkRR(RoomRecognizer):
         RoomRecognizer.__init__(self)
         # 颜色匹配 颜色占比 阈值
         self.threshold_color_match_poker = 0.2 # 判断花色
-        self.threshold_color_match_status = 0.50 # 花色识别中，掩码中有效像素比例
+        self.threshold_color_match_decision = 0.50 # 花色识别中，掩码中有效像素比例
         self.threshold_color_match_hero_turn = 0.3 # hero回合标志颜色比例
         self.threshold_color_match_have_cards = 0.3 # 是有手牌颜色比例
         self.threshold_color_match_is_empty_seat = 0.50 # 是否有玩家比例
@@ -288,7 +290,7 @@ class wpkRR(RoomRecognizer):
         }
 
         # 定义状态的HSV颜色范围 0.5
-        self.color_ranges_status = {
+        self.color_ranges_decision = {
             'bc':  ([ 13, 168, 214], [ 17, 227, 239]), # bet call
             'r': ([105, 127,  66], [110, 237, 239]), #raise orange
             'x': ([ 37, 146,  56], [ 43, 245, 207]), # check green
@@ -316,59 +318,67 @@ class wpkRR(RoomRecognizer):
         # preflop: limp = 'Call', open&raise = 'Raise', fold = 'Fold', allin='All in'
         # postflop: bet = 'Bet', raisex = 'Raise', check = 'Check', fold = 'Fold',
     
-    # 在特定平台实现，wpk 颜色+字符        
-    def get_player_status(self, abs_position):
-        status = None
-        croped_img_status = self.windowshot.crop(filled_room_rects[f'P{abs_position}_status'])
+    # 玩家的状态，check, call, bet, raise; fold, all-in，unknow
+    def get_player_decision(self, abs_position):
+        # name string, photo string, photo color, 
+        decision = None
+        croped_img_decision = self.windowshot.crop(filled_room_rects[f'P{abs_position}_decision'])
         
-        status_text = self.recognize_string(croped_img_status) # correct函数放在这里
-        status_color = self.color_matching(croped_img_status, self.color_ranges_status, self.threshold_color_match_status)
-        if status_color == 'r':
-            status = 'Raise'
-        elif status_color == 'x':
-            status = 'Check'
-        elif status_color == 'bc':
-            if status_text == 'Bet':
-                status = 'Bet'
-            elif status_text == 'Call':
-                status = 'Call'
+        decision_text = self.recognize_string(croped_img_decision) 
+        decision_text_corrected = self.correct_decision_terms(decision_text) # correct函数放在这里
+        decision_color = self.color_matching(croped_img_decision, self.color_ranges_decision, self.threshold_color_match_decision)
+        if decision_color == 'r':
+            decision = 'Raise'
+        elif decision_color == 'x':
+            decision = 'Check'
+        elif decision_color == 'bc':
+            if decision_text_corrected == 'Bet':
+                decision = 'Bet'
+            elif decision_text_corrected == 'Call':
+                decision = 'Call'
             else:
-                print(f"P{abs_position}状态识别失败, 识别结果：{status_text}")
-                status = 'Error'
+                logger.error(f"P{abs_position}状态识别失败, 识别结果：{decision_text}")
+                decision = 'Error'
         else:
-            # 如果有困难 需要用到交叉数据，就定义成unknow给到 hands去更新装填
-            # 判断字符串识别是不是可靠的
-
-            # 如果有没有牌是可靠的
-            # 判断是不是active
-                # 不是allin就是TBD
-            # 否则就是fold或者waiting等，只需要判断有没有fold字符串就行
-
-            # 如果有没有牌不可靠
-            # 判断是不是待行动
-                # 在1-dealer之间，有funds，头像彩色，有手牌
             croped_img_photo = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
-            photo_color = self.color_matching(croped_img_photo, self.color_ranges_empty_seat, self.threshold_color_match_is_empty_seat)
-            photo_text = self.recognize_string(croped_img_photo) # correct函数放在这里
-            # 判断是不是all in
-                # have card, funds = 0, pot > 0
-            if photo_text == 'All in':
-                status = 'All in'
-            # 判断是不是fold
-                # not have card or have funds&pot<lastraise, fold color
-            elif photo_text == 'Fold':
-                status = 'Fold'
-            # 判断是不是空位
-            elif photo_color == 'empty': 
-                status = 'Empty'
-            # 判断是不是等待
-            elif photo_text in ['Waiting', 'Sitting']:
-                status = 'Waiting'
+            photo_text = self.recognize_string(croped_img_photo) 
+            photo_text_corrected = self.correct_decision_terms(photo_text) # correct函数放在这里
+            if photo_text_corrected == 'Fold':
+                decision = 'Fold'
+            elif photo_text_corrected == 'All in':
+                decision = 'All in'
             else:
-                print(f"P{abs_position}状态识别失败, 识别结果：{photo_text}")
-                status = 'Error'
-        return status
+                decision = '----'
+                logger.debug(f"P{abs_position}状态识别结果：{photo_text}")
+        return decision
     
+    def correct_decision_terms(self, ocr_result):
+        terms = ["Bet", "Raise", "Check", "Call", "Fold", 'All']
+        # 定义替换规则来修正常见的OCR错误
+        corrections = {
+            '0': 'o',  # 或 'O' 根据上下文
+            '1': 'l',  # 或 'I' 或 'i' 根据上下文
+            '5': 's',  # 或 'S'
+            '8': 'B',
+            'All': 'All in',  # !!!!!!!!!!!!! 这个要确认下
+            # 添加更多的替换规则
+        }
+        
+        # 对OCR结果应用替换规则
+        for wrong, correct in corrections.items():
+            ocr_result = re.sub(wrong, correct, ocr_result, flags=re.IGNORECASE)
+
+        # 将OCR结果与预定义的术语列表进行匹配
+        matched_term = None
+        for term in terms:
+            # 使用正则表达式进行不区分大小写的匹配
+            if re.fullmatch(term, ocr_result, re.IGNORECASE):
+                matched_term = term
+                break
+        
+        # 如果匹配到预定义的术语，则返回该术语，否则返回"其他"
+        return matched_term.capitalize() if matched_term else "others"
+
     def windowshot_input(self, img):
         self.windowshot = img
 

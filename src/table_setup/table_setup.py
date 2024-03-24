@@ -10,11 +10,11 @@
 #          输   入：1.png （要求 river轮，4.png底池长，5.png底池短，6.png正常，可两人模拟）
 
 # 识别2：   玩家信息：手牌状态，行动决定，行动数字，后手筹码，头像位置。 共5x9个 !!! 头像位置后期要根据fold、allin、leave等状态重新画框
-#          输   入：2 - 10.png （对应位置存货，已行动，行动数字有偿有短）
+#          输   入：2 - 10.png （P0-P9）（对应位置存货，已行动，行动数字有偿有短）
 
 
 # 识别3：   玩家信息：BTN范围。 共1x1个
-#          输   入：11 - 19.png （从下家顺时针，每个button图标）
+#          输   入：11 - 19.png (P0-P9)（从下家顺时针，每个button图标）
 
 # 识别4：   玩家ID，buyin, seatdown, leave, joinroom, closepromotion
 #          输   入：20+
@@ -53,15 +53,15 @@ rect_names1 = [
     "bet1", "bet2", "bet3", "bet4", "bet5"
     ]
 
-rect_names2 = ["P0_have_cards", "P0_status", "P0_pot", "P0_funds", "P0_photo"]
-rect_names3 = ["P1_have_cards", "P1_status", "P1_pot", "P1_funds", "P1_photo"]
-rect_names4 = ["P2_have_cards", "P2_status", "P2_pot", "P2_funds", "P2_photo"]
-rect_names5 = ["P3_have_cards", "P3_status", "P3_pot", "P3_funds", "P3_photo"]
-rect_names6 = ["P4_have_cards", "P4_status", "P4_pot", "P4_funds", "P4_photo"]
-rect_names7 = ["P5_have_cards", "P5_status", "P5_pot", "P5_funds", "P5_photo"]
-rect_names8 = ["P6_have_cards", "P6_status", "P6_pot", "P6_funds", "P6_photo"]
-rect_names9 = ["P7_have_cards", "P7_status", "P7_pot", "P7_funds", "P7_photo"]
-rect_names10 = ["P8_have_cards", "P8_status", "P8_pot", "P8_funds", "P8_photo"]
+rect_names2 = ["P0_have_cards", "P0_decision", "P0_pot", "P0_funds", "P0_photo"]
+rect_names3 = ["P1_have_cards", "P1_decision", "P1_pot", "P1_funds", "P1_photo"]
+rect_names4 = ["P2_have_cards", "P2_decision", "P2_pot", "P2_funds", "P2_photo"]
+rect_names5 = ["P3_have_cards", "P3_decision", "P3_pot", "P3_funds", "P3_photo"]
+rect_names6 = ["P4_have_cards", "P4_decision", "P4_pot", "P4_funds", "P4_photo"]
+rect_names7 = ["P5_have_cards", "P5_decision", "P5_pot", "P5_funds", "P5_photo"]
+rect_names8 = ["P6_have_cards", "P6_decision", "P6_pot", "P6_funds", "P6_photo"]
+rect_names9 = ["P7_have_cards", "P7_decision", "P7_pot", "P7_funds", "P7_photo"]
+rect_names10 = ["P8_have_cards", "P8_decision", "P8_pot", "P8_funds", "P8_photo"]
 
 rect_names11 = ["P0_dealer"]
 rect_names12 = ["P1_dealer"]

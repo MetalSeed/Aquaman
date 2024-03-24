@@ -40,4 +40,3 @@ def draw_multiple_rectangles_and_save(image_path, rectangles, save_path):
     cv2.imwrite(save_path, img)
     print(f"保存修改后的图片到 {save_path}")
 
-

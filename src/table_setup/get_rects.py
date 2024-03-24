@@ -128,7 +128,7 @@ def main(image_path):
 if __name__ == '__main__':
     # 提示用户输入图片编号
     # image_number = (input("请输入图片编号: "))
-    image_number = 'call'
+    image_number = '112'
     
     # 构造文件名和读取路径
     image_name = f"{image_number}.png"  
