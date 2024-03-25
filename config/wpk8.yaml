@@ -79,9 +79,9 @@ P2_have_cards: !!python/tuple
 - 37
 - 465
 P2_photo: !!python/tuple
-- 35
+- 29
 - 421
-- 77
+- 79
 - 447
 P2_pot: !!python/tuple
 - 92
@@ -144,9 +144,9 @@ P4_photo: !!python/tuple
 - 293
 - 194
 P4_pot: !!python/tuple
-- 235
-- 271
-- 304
+- 233
+- 273
+- 307
 - 294
 P5_dealer: !!python/tuple
 - 421

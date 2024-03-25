@@ -142,6 +142,7 @@ class RoomRecognizer(ImageRecognizer):
             if poker:
                 public_cards.append(poker)
             else:
+                logger.info(f'公共牌{poker}识别失败')
                 logger.info(f'公共牌{i+1}不存在')
                 break
         return public_cards
@@ -288,12 +289,13 @@ class wpkRR(RoomRecognizer):
             's': ([0, 0, 0],[60, 85, 28]),     # 黑色 spade
             'd': ([ 13, 184, 189], [ 15, 255, 206]),  # 蓝色 diamond
         }
-
+        
+        # check = green call = blue, raise = range, bet = green blue orange
         # 定义状态的HSV颜色范围 0.5
         self.color_ranges_decision = {
-            'bc':  ([ 13, 168, 214], [ 17, 227, 239]), # bet call
-            'r': ([105, 127,  66], [110, 237, 239]), #raise orange
-            'x': ([ 37, 146,  56], [ 43, 245, 207]), # check green
+            'blue':  ([ 13, 168, 214], [ 17, 227, 239]), # bet call
+            'orange': ([105, 127,  66], [110, 237, 239]), #raise orange
+            'green': ([ 37, 146,  56], [ 43, 245, 207]), # check green
         }
         # 定义状态的HSV颜色范围 1or2 > 0.3
         self.color_ranges_hero_turn = {
@@ -327,17 +329,19 @@ class wpkRR(RoomRecognizer):
         decision_text = self.recognize_string(croped_img_decision) 
         decision_text_corrected = self.correct_decision_terms(decision_text) # correct函数放在这里
         decision_color = self.color_matching(croped_img_decision, self.color_ranges_decision, self.threshold_color_match_decision)
-        if decision_color == 'r':
-            decision = 'Raise'
-        elif decision_color == 'x':
-            decision = 'Check'
-        elif decision_color == 'bc':
+        
+        # check = green call = blue, raise = range, bet = green blue orange
+        if decision_color in ['blue', 'orange', 'green']:
             if decision_text_corrected == 'Bet':
                 decision = 'Bet'
-            elif decision_text_corrected == 'Call':
+            elif decision_color == 'orange':
+                decision = 'Raise'
+            elif decision_color == 'green':
+                decision = 'Check'
+            elif decision_color == 'blue':
                 decision = 'Call'
             else:
-                logger.error(f"P{abs_position}状态识别失败, 识别结果：{decision_text}")
+                logger.error(f"P{abs_position} Raise or Bet 字符识别失败, 识别结果：{decision_text}, 矫正结果：{decision_text_corrected}")
                 decision = 'Error'
         else:
             croped_img_photo = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
@@ -348,8 +352,9 @@ class wpkRR(RoomRecognizer):
             elif photo_text_corrected == 'All in':
                 decision = 'All in'
             else:
-                decision = '----'
-                logger.debug(f"P{abs_position}状态识别结果：{photo_text}")
+                decision = 'unrec'
+                logger.info(f"P{abs_position}状态识别结果：{photo_text}")
+                logger.info(f"P{abs_position}状态矫正结果：{photo_text_corrected}")
         return decision
     
     def correct_decision_terms(self, ocr_result):
@@ -366,24 +371,46 @@ class wpkRR(RoomRecognizer):
         
         # 对OCR结果应用替换规则
         for wrong, correct in corrections.items():
-            ocr_result = re.sub(wrong, correct, ocr_result, flags=re.IGNORECASE)
+            ocr_result = re.sub(wrong, correct, ocr_result)
+    
+        ###########################
+        # correct_ocr_result
+        # 先处理特定的模式替换，比如Fo*都替换成Fold
+        ocr_result = re.sub(r'\bFo[a-zA-Z]*\b', 'Fold', ocr_result)
+        ocr_result = re.sub('Cail', 'Call', ocr_result)
+    
+        ###########################
 
         # 将OCR结果与预定义的术语列表进行匹配
         matched_term = None
         for term in terms:
-            # 使用正则表达式进行不区分大小写的匹配
-            if re.fullmatch(term, ocr_result, re.IGNORECASE):
+            # 使用正则表达式进行匹配
+            if re.fullmatch(term, ocr_result):
                 matched_term = term
                 break
         
+        if not matched_term:
+            logger.info(f"未匹配到预定义术语：{ocr_result}")
         # 如果匹配到预定义的术语，则返回该术语，否则返回"其他"
-        return matched_term.capitalize() if matched_term else "others"
+        return matched_term.capitalize() if matched_term else "unknow"
 
     def windowshot_input(self, img):
         self.windowshot = img
 
 
+class BaseStrCorrector:
+    def __init__(self):
+        pass
 
+    def decision(self, text):
+        pass
+
+    def pokerrank(self, text):
+        pass
+
+class StrCorrector(BaseStrCorrector):
+    def __init__(self):
+        pass
 
 
 

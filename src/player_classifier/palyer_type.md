@@ -79,8 +79,18 @@ RiveXR
 LaoDingHUD
 https://zhuanlan.zhihu.com/p/362856150
 
+# Aqm HUD simple
+Bange nickname hands 
+VPIP  PFR  3B F3B 4B
+      Flop Trun Rvier Raise BetRv
+WWSD
+WWSx
+AGG
+WTSD
+CB                    XF    XR
 
-# Aqm HUD
+
+# Aqm HUD 
 Bange nickname hands 
 VPIP  PFR  3B F3B 4B
       Flop Trun Rvier RB 1+ 1+Allin

@@ -132,8 +132,8 @@ class Hands():
         temp_action = {
             'position': player.position, 
             'action': None, 
-            'pot': 0, 
-            'funds': 0, 
+            'pot': 0.0, 
+            'funds': 0.0, 
             'abs_position': 0
         }
 
@@ -260,7 +260,13 @@ class Hands():
 
             # add to actions list and raiser list
             temp_action = self.get_action_dict(i, round)
-            actions_list.append(temp_action)
+            if new_stage_flag: # new stage直接加到actions_list
+                actions_list.append(temp_action)
+            else: # repeat stage要把TBD更新成实际行动
+                for i, action_clip in enumerate(reversed(actions_list)):
+                    if action_clip['abs_position'] == temp_action['abs_position']:
+                        if action_clip['action'] != 'TBD': logger.error(f"abs_position P{action_clip['abs_position']} action not TBD")
+                        actions_list[-i-1] = temp_action
             if temp_action['action'] == 'Bet' or temp_action['action'] == 'Raise':
                 raiser_list.append(temp_action)
         
@@ -274,7 +280,7 @@ class Hands():
                 end_abs_postion = round.dealer_abs_position + 1 # BTN + 1
         else: end_abs_postion = raiser_list[-1]['abs_position'] - 1
         # 如果新阶段，last_actor是hero,要特殊处理，不存在老阶段hero最后行动还回到hero的情况
-        if not new_stage_flag and end_abs_postion == 0:
+        if new_stage_flag and end_abs_postion == 0:
             end_abs_postion = round.max_players
 
         for i in range(start_abs_postion, end_abs_postion):
@@ -288,17 +294,17 @@ class Hands():
     
 
     # 检查无误之后，把round加入rounds_list，再进行后续更新
-    def add_round(self, round):
-        if self.datacheck() is not True:
-            print('Data check failed')
-            return False
-        
+    def add_round(self, round):        
         # 新手牌，初始化hands
         self.new_hands_flag = self.check_new_hands(round)
         if self.new_hands_flag:
             self.__init__()
             if self.total_players is None and round.stage == 'preflop': 
                 self.total_players = sum(1 for player in round.players if player.join_hands is True)
+
+        if self.datacheck(self.new_hands_flag, round) is not True:
+            print('Data check failed')
+            return False
 
         # 判断是否是新阶段
         new_stage_flag = None
@@ -331,14 +337,26 @@ class Hands():
             flag = True
         return flag
 
-    def datacheck(self):
+    def datacheck(self, new_hands_flag, round):
         check_flag = True
         # active历史
         # pot, ttpot, plrpot, plrfunds
         # poker cards
         # jon_hands active
         # 检查数据是否完整
-        # 异常save到log和文件
+        # 异常save到log和文件，给table发指令
+        
+        # wpk correct， 提高字符串识别准确度，就不用在这里矫正了
+        if new_hands_flag is False:
+            
+            for i in range(self.total_players):
+                # 更新join_hands 后重新街识别问题
+                round.players[i].join_hands = self.rounds_list[0].players[i].join_hands
+                # 更新fold之后decision识别准确度问题
+                if round.players[i].join_hands is True and round.players[i].have_cards is False:
+                    round.players[i].decision = 'Fold' 
+        
+        # error dicision，active的error 用筹码校验
         return check_flag
 
 

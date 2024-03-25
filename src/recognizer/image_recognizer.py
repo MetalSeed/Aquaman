@@ -88,9 +88,13 @@ class ImageRecognizer:
             return None
         return suit
 
-    def preprocess_image(self, image, lighttext = True, threshold_binary=100, binarize=True, name = None):
-        if lighttext: basewidth = 300
-        else: basewidth = 100
+    # auto_threshold: 自动二值化阈值  当图像的字体与背景分散在两极时，自适应比较方便。当背景色分散在两极时，截图范围大了会有bug，可以用手动值来解决
+    def preprocess_image(self, image, auto_threshold = True, threshold_binary=100, binarize=True, name = None):
+        if auto_threshold:
+            basewidth = 100
+        else:
+            basewidth = 300
+
         wpercent = (basewidth / float(image.size[0]))
         hsize = int((float(image.size[1]) * float(wpercent)))
         img_resized = image.convert('L').resize((basewidth, hsize), Image.LANCZOS)
@@ -100,10 +104,11 @@ class ImageRecognizer:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # 应用高斯模糊
             blur = cv2.GaussianBlur(img, (5, 5), 0)
-            if lighttext: # 浅色字体，深色背景，cv2.THRESH_BINARY_INV 反转二进制
-                _, thresh = cv2.threshold(blur, threshold_binary, 255, cv2.THRESH_BINARY_INV) 
-            else: # 深色字体，浅色背景 自适应二值化阈值
+            if auto_threshold:  # 自适应二值化阈值，适用于颜色单一的情况
                 _, thresh = cv2.threshold(blur, threshold_binary, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
+            else:  # 白色字体，适用于所有背景都是偏暗色的的情况，cv2.THRESH_BINARY_INV 反转二进制 变成黑色字体
+                _, thresh = cv2.threshold(blur, threshold_binary, 255, cv2.THRESH_BINARY_INV) 
+
             img_resized = thresh
         if processed_img_save:
             # 保存在data/test目录下
@@ -118,22 +123,27 @@ class ImageRecognizer:
     # 识别图像中的点数
     def recognize_rank(self, img):
         # 预处理图像
-        preprocessed_img = self.preprocess_image(img, False, name = 'rank')
+        preprocessed_img = self.preprocess_image(img, True, name = 'rank')
         # OCR配置：不限制字符集，适合识别点数
         custom_config = r'--oem 3 --psm 10'
         rank_text = pytesseract.image_to_string(preprocessed_img, config=custom_config)
         rank_text = rank_text.strip()  # 去除前后空格
         logger.info(f"# Card_rank #: {rank_text}")
         
+        # wpk后处理函数
         # 后处理：校正常见的识别错误和“10”的特殊情况
         corrected_rank = rank_text.replace('IO', '10').replace('I0', '10').replace('1O', '10').replace('0', '10').replace('O', '9')
+        corrected_rank = rank_text.replace('q', 'Q')
+        
+        
         # 验证点数是否有效
         valid_ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
         if corrected_rank in valid_ranks:
             return corrected_rank
         else:
             logger.debug("点数未识别")
-            pass
+            logger.warning(f"rank_text: {rank_text}, corrected_rank: {corrected_rank}")
+            
             return None
 
     def detect_text_by_color_difference(self, img, std_dev_threshold):
@@ -166,6 +176,8 @@ class ImageRecognizer:
         
         # 组合点数和花色
         result = f'{rank}{suit}' if suit and rank else None
+        if result is None:
+            logger.warning(f"# Poker rank : {rank} ## Poker suit : {suit}")
         return result
        
 
@@ -174,7 +186,7 @@ class ImageRecognizer:
         threshold_text = self.detect_text_by_color_difference(img, self.threshold_color_diff_text_background)
         if threshold_text is False: return None
         """New OCR based on tesserocr rather than pytesseract, should be much faster"""
-        # 预处理图像
+        # 预处理图像 以前版本是auto_threshold是False
         preprocessed_img = self.preprocess_image(img, True, self.threshold_binary_white_text, name = 'digits')
         # 配置Tesseract以仅识别数字
         custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789.$£B'
@@ -189,12 +201,12 @@ class ImageRecognizer:
         else:
             return digits
 
-    # 识别图像中的字符串
-    def recognize_string(self, img):
+    # 识别图像中的字符串, 自动二值化阈值 
+    def recognize_string(self, img, auto_threshold = True):
         threshold_text = self.detect_text_by_color_difference(img, self.threshold_color_diff_text_background)
         if threshold_text is False: return None
         # 预处理图像
-        preprocessed_img = self.preprocess_image(img, True, self.threshold_binary_white_text, name = 'string')
+        preprocessed_img = self.preprocess_image(img, auto_threshold, self.threshold_binary_white_text, name = 'string')
         # 使用Tesseract OCR识别字符串
         custom_config = r'--oem 3 --psm 8 -c tessedit_char_whitelist="BetRaiseCheckCallFoldAll"'
         string = pytesseract.image_to_string(preprocessed_img, config=custom_config)
@@ -202,7 +214,7 @@ class ImageRecognizer:
 
     # 识别图像中的字符串
     def recognize_black_digits(self, img):
-        preprocessed_img = self.preprocess_image(img, False, self.threshold_binary_white_text)
+        preprocessed_img = self.preprocess_image(img, True, self.threshold_binary_white_text)
         # 使用Tesseract OCR识别字符串
         custom_config = r'--oem 3 --psm 6 outputbase digits'
         string = pytesseract.image_to_string(preprocessed_img, config=custom_config)

@@ -39,7 +39,7 @@ def main(ws_input_path):
             print(f"{key}: {value}")
 
 if __name__ == '__main__':
-    ws_input_path = get_file_full_name('ws4.png', 'data', 'test')
+    ws_input_path = get_file_full_name('w25.png', 'data', 'test')
     main(ws_input_path)
 
 # status to be done

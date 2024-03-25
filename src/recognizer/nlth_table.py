@@ -122,7 +122,7 @@ class Table:
             self.players[i].funds = self.prr.get_player_funds(i)
             self.players[i].decision = self.prr.get_player_decision(i)
 
-            # jonin_hands
+            # jonin_hands, 'Fold'的识别准确度有待提升
             if self.players[i].have_cards is False and self.players[i].decision != 'Fold':
                 self.players[i].join_hands = False
             else:

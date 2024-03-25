@@ -26,47 +26,93 @@ from src.recognizer.nlth_table import Table
 from src.tools.aqm_utils import get_file_full_name
 from src.hands_converter.class_hands import Round, Hands
 
+# 测试的table shots和对应决策
+input_dict1 = {
+    'ws1': 'R1',
+    'ws2': 'X',
+    'ws3': 'X',
+    'ws4': 'X',
+}
+input_dict2 = {
+    'w21': 'C',
+    'w22': 'C',
+    'w23': 'X',
+    'w24': 'X',
+    'w25': 'F',
+}
+input_dict3 = {
+    'w31': 'C',
+    'w32': 'X',
+    'w33': 'C',
+    'w34': 'X',
+    'w35': 'R1',
+    'w36': 'C',
+}
+input_dict4 = {
+    'w41': 'X',
+    'w42': 'X',
+    'w43': 'X',
+    'w44': 'X',
+}
+input_dict5 = {
+    'w61': 'C',
+    'w62': 'C',
+    'w63': 'X',
+    'w64': 'X',
+}
 
-def main():
-    hands = Hands()
-    table = Table()
+def hands_input(hands, table, windowshotid, decision):
+    # 提示用户输入图片编号
+    image_name = windowshotid
+    # 构造文件名和读取路径
+    image_name = f"{image_name}.png"  
+    ws_input_path = get_file_full_name(image_name, 'data', 'test')
+    print(f"当前处理的图片是: {ws_input_path}")
 
+    # screen input
+    windowshot_pil = Image.open(ws_input_path)
+    table.prr.windowshot_input(windowshot_pil)
+
+    # IR
+    table.clear()
+    table.update_table_info()
+    table.print_table_dict()
+    table_dict = table.get_table_dict()
+    
+    # update hands
+    round = Round()
+    round.tabledict2round(table_dict)
+    hands.add_round(round)
+
+    hands.print_hands_info()
+
+    print(f"你的决策是: {decision}")
+    hands.add_hero_action(decision)
+
+def hands_input_loop():
     while True:
         # 提示用户输入图片编号
         image_number = input("请输入图片编号: ")
         if image_number.lower() == 'q':
             break
-        # 构造文件名和读取路径
-        image_name = f"{image_number}.png"  
-        ws_input_path = get_file_full_name(image_name, 'data', 'test')
-
-        # screen input
-        windowshot_pil = Image.open(ws_input_path)
-        table.prr.windowshot_input(windowshot_pil)
-
-        # IR
-        table.clear()
-        table.update_table_info()
-        table.print_table_dict()
-        table_dict = table.get_table_dict()
-        
-        # update hands
-        round = Round()
-        round.tabledict2round(table_dict)
-        hands.add_round(round)
-
-        hands.print_hands_info()
-
         # make decision
-        decision = input("请输入你的决策: ") # 'F', 'X', 'C', 'R1' - 'R5'   
         # dicision = get_decision(hands)
-        hands.add_hero_action(decision)
-        
-        
+        decision = input("请输入你的决策: ") # 'F', 'X', 'C', 'R1' - 'R5'   
+        hands_input(image_number, decision)
+
+def main():
+    hands = Hands()
+    table = Table()
+
+    decision_dict = input_dict2
+    for image_name, decision in decision_dict.items():
+        hands_input(hands, table, image_name, decision)
+
+    # hands_input_loop()
 
 if __name__ == '__main__':
     main()
 
-# 检查hero 在BTN BB SS的情况。人数少于5的情况。UTG，CO的情况
+# 检查座位是空的情况下， 起始坐标的问题，从join_hands里跳1或者2个位置
 
-# 要看怎么释放round的存储空间
+# 要看怎么释放round的存储空间, hands = None,然后重新赋值就行了

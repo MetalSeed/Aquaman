@@ -144,9 +144,12 @@ def process_rect(img, rect):
     # 从全局图像中裁剪出矩形区域
     cropped_img = windowshot.crop((rect[0][0], rect[0][1], rect[1][0], rect[1][1]))
     # 输出OCR识别结果
-    words = IRtool.recognize_string(cropped_img)
-    txt = IRtool.recognize_black_digits(cropped_img)
-    print(f"OCR Result: {txt}")
+    num = IRtool.recognize_digits(cropped_img)
+    print(f"OCR Result: pot: {num}")
+    decision = IRtool.recognize_string(cropped_img)
+    print(f"OCR Result: decision: {decision}")
+    # txt = IRtool.recognize_black_digits(cropped_img) # 识别黑色数字 房间名
+    # print(f"OCR Result: {txt}")
     # 输出目标颜色占比
     test_color_ratio(cropped_img, rect, target_color)
 
@@ -203,8 +206,10 @@ target_color = heart
 
 if __name__ == "__main__":
     # file_name = input("请输入文件名: ")
-    file_name = '211'
+    file_name = 'w25'
     
     img_path = f"{file_name}.png"
     file_path = get_file_full_name(img_path, 'data', 'test')
     process_image(file_path)
+
+    current_rectangle = (233, 273, 307, 294)
