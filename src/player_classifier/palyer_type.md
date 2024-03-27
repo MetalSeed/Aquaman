@@ -81,14 +81,23 @@ https://zhuanlan.zhihu.com/p/362856150
 
 # Aqm HUD simple
 Bange nickname hands 
-VPIP  PFR  3B F3B 4B
-      Flop Trun Rvier Raise BetRv
-WWSD
-WWSx
-AGG
-WTSD
-CB                    XF    XR
+    VPIP PFR 3B F3B
+      Flop Trun Rvier 
+AGF    
+wtsd
+vCB
 
+B$SD
+R$SD
+CB                 
+
+wwsf
+AGT
+AGR
+
+MBB
+SBB
+OBB
 
 # Aqm HUD 
 Bange nickname hands 

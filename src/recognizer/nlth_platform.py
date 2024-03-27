@@ -311,23 +311,14 @@ class wpkRR(RoomRecognizer):
             'empty': ([150,   3,  33], [150,  39, 107]),  # 黑色
         }
 
-        #################
-        #################
-        # 数字文字卡片OCR的后矫正放在这里 #
-        #################
-        #################
-
-        # preflop: limp = 'Call', open&raise = 'Raise', fold = 'Fold', allin='All in'
-        # postflop: bet = 'Bet', raisex = 'Raise', check = 'Check', fold = 'Fold',
-    
     # 玩家的状态，check, call, bet, raise; fold, all-in，unknow
     def get_player_decision(self, abs_position):
         # name string, photo string, photo color, 
         decision = None
         croped_img_decision = self.windowshot.crop(filled_room_rects[f'P{abs_position}_decision'])
         
-        decision_text = self.recognize_string(croped_img_decision) 
-        decision_text_corrected = self.correct_decision_terms(decision_text) # correct函数放在这里
+        decision_text = self.recognize_decision_string(croped_img_decision) 
+        decision_text_corrected = self.ocr_corrector_decison(decision_text) # correct函数放在这里
         decision_color = self.color_matching(croped_img_decision, self.color_ranges_decision, self.threshold_color_match_decision)
         
         # check = green call = blue, raise = range, bet = green blue orange
@@ -345,41 +336,54 @@ class wpkRR(RoomRecognizer):
                 decision = 'Error'
         else:
             croped_img_photo = self.windowshot.crop(filled_room_rects[f'P{abs_position}_photo'])
-            photo_text = self.recognize_string(croped_img_photo) 
-            photo_text_corrected = self.correct_decision_terms(photo_text) # correct函数放在这里
+            photo_text = self.recognize_decision_string(croped_img_photo) 
+            photo_text_corrected = self.ocr_corrector_decison(photo_text) # correct函数放在这里
             if photo_text_corrected == 'Fold':
                 decision = 'Fold'
-            elif photo_text_corrected == 'All in':
-                decision = 'All in'
+            elif photo_text_corrected == 'Allin':
+                decision = 'Allin'
             else:
                 decision = 'unrec'
                 logger.info(f"P{abs_position}状态识别结果：{photo_text}")
                 logger.info(f"P{abs_position}状态矫正结果：{photo_text_corrected}")
         return decision
     
-    def correct_decision_terms(self, ocr_result):
-        terms = ["Bet", "Raise", "Check", "Call", "Fold", 'All']
+ # OCR corrector 部分
+    def corrector_poker_rank(self, rank_text):
+        logger.info(f"# Card_rank #: {rank_text}")
+        # 矫正10的识别错误
+        corrected_rank = rank_text.replace('IO', 'T').replace('I0', 'T').replace('1O', 'T').replace('10', 'T').replace('0', 'T')
+        # 矫正Q的识别错误，注意用corrected_rank替换rank_text，否则会被替代
+        corrected_rank = corrected_rank.replace('q', 'Q')
+        
+        # 验证点数是否有效
+        valid_ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+        if corrected_rank in valid_ranks:
+            return corrected_rank
+        else:
+            logger.warning(f"点数匹配出错 rank_text: {rank_text}, corrected_rank: {corrected_rank}")
+            return None
+
+    # OCR corrector
+    def ocr_corrector_decison(self, ocr_result):
+        ocr_text = ocr_result
+        terms = ["Bet", "Raise", "Check", "Call", "Fold", 'Allin']
         # 定义替换规则来修正常见的OCR错误
         corrections = {
             '0': 'o',  # 或 'O' 根据上下文
             '1': 'l',  # 或 'I' 或 'i' 根据上下文
             '5': 's',  # 或 'S'
             '8': 'B',
-            'All': 'All in',  # !!!!!!!!!!!!! 这个要确认下
-            # 添加更多的替换规则
         }
         
         # 对OCR结果应用替换规则
         for wrong, correct in corrections.items():
             ocr_result = re.sub(wrong, correct, ocr_result)
     
-        ###########################
-        # correct_ocr_result
-        # 先处理特定的模式替换，比如Fo*都替换成Fold
+        # 处理特定的模式替换，比如Fo*都替换成Fold
         ocr_result = re.sub(r'\bFo[a-zA-Z]*\b', 'Fold', ocr_result)
+        ocr_result = re.sub(r'\bAll[a-zA-Z]*\b', 'Allin', ocr_result)
         ocr_result = re.sub('Cail', 'Call', ocr_result)
-    
-        ###########################
 
         # 将OCR结果与预定义的术语列表进行匹配
         matched_term = None
@@ -389,28 +393,14 @@ class wpkRR(RoomRecognizer):
                 matched_term = term
                 break
         
-        if not matched_term:
-            logger.info(f"未匹配到预定义术语：{ocr_result}")
-        # 如果匹配到预定义的术语，则返回该术语，否则返回"其他"
+        if not matched_term: logger.warning(f"decision矫正异常，ocr_text: {ocr_text}, 矫正后的结果：{ocr_result}")
         return matched_term.capitalize() if matched_term else "unknow"
-
+    
     def windowshot_input(self, img):
         self.windowshot = img
 
 
-class BaseStrCorrector:
-    def __init__(self):
-        pass
 
-    def decision(self, text):
-        pass
-
-    def pokerrank(self, text):
-        pass
-
-class StrCorrector(BaseStrCorrector):
-    def __init__(self):
-        pass
 
 
 

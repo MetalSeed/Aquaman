@@ -26,40 +26,6 @@ from src.recognizer.nlth_table import Table
 from src.tools.aqm_utils import get_file_full_name
 from src.hands_converter.class_hands import Round, Hands
 
-# 测试的table shots和对应决策
-input_dict1 = {
-    'ws1': 'R1',
-    'ws2': 'X',
-    'ws3': 'X',
-    'ws4': 'X',
-}
-input_dict2 = {
-    'w21': 'C',
-    'w22': 'C',
-    'w23': 'X',
-    'w24': 'X',
-    'w25': 'F',
-}
-input_dict3 = {
-    'w31': 'C',
-    'w32': 'X',
-    'w33': 'C',
-    'w34': 'X',
-    'w35': 'R1',
-    'w36': 'C',
-}
-input_dict4 = {
-    'w41': 'X',
-    'w42': 'X',
-    'w43': 'X',
-    'w44': 'X',
-}
-input_dict5 = {
-    'w61': 'C',
-    'w62': 'C',
-    'w63': 'X',
-    'w64': 'X',
-}
 
 def hands_input(hands, table, windowshotid, decision):
     # 提示用户输入图片编号
@@ -100,11 +66,40 @@ def hands_input_loop():
         decision = input("请输入你的决策: ") # 'F', 'X', 'C', 'R1' - 'R5'   
         hands_input(image_number, decision)
 
+# 测试的table shots和对应决策
+input_dict1 = {
+    'w11': 'R1',
+    'w12': 'X',
+    'w13': 'X',
+    'w14': 'X',
+}
+input_dict2 = {
+    'w21': 'C',
+    'w22': 'C',
+    'w23': 'X',
+    'w24': 'X',
+    'w25': 'F',
+}
+input_dict3 = {
+    'w31': 'C',
+    'w32': 'X',
+    'w33': 'C',
+    'w34': 'X',
+    'w35': 'R1',
+    'w36': 'C',
+}
+input_dict4 = {
+    'w41': 'X',
+    'w42': 'X',
+    'w43': 'X',
+    'w44': 'X',
+}
+
 def main():
     hands = Hands()
     table = Table()
 
-    decision_dict = input_dict2
+    decision_dict = input_dict3
     for image_name, decision in decision_dict.items():
         hands_input(hands, table, image_name, decision)
 

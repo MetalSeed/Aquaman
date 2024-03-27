@@ -14,15 +14,15 @@ logging.basicConfig(format=(
     '%(asctime)s - %(levelname)s - '
     '[%(filename)s - %(funcName)s - Line %(lineno)d]: '
     '%(message)s'
-), level=logging.INFO)
+), level=logging.WARNING)
 
+
+# 特定bug之后，把原图，预处理，结果都保存下来
+processed_img_save = False
 
 # 为特定模块获取一个日志器
 logger = logging.getLogger('moduleName')
 logger.setLevel(logging.WARNING)  # 为这个日志器设置级别
-
-
-processed_img_save = False
 
 ###############################
 #       添加项目根目录          #        
@@ -53,41 +53,7 @@ class ImageRecognizer:
         self.threshold_color_match_poker = 0.2 # 判断花色
         self.threshold_binary_white_text = 100 # 浅色字体二值化阈值
         
-
-    def check_color_presence(self, mask, image_area):
-        # 计算掩码中非零像素的比例
-        non_zero_count = cv2.countNonZero(mask)
-        ratio = non_zero_count / image_area
-        # 如果非零像素的比例大于阈值，则认为该颜色存在
-        return ratio
-    
-        # color matching
-    def color_matching(self, croped_img, color_ranges, color_ratio_threshold):
-        image_array = np.array(croped_img)
-        hsv = cv2.cvtColor(image_array, cv2.COLOR_BGR2HSV)
-        image_area = image_array.shape[0] * image_array.shape[1]
-
-        for colorname, (lower, upper) in color_ranges.items():
-            lower = np.array(lower, dtype="uint8")
-            upper = np.array(upper, dtype="uint8")
-            mask = cv2.inRange(hsv, lower, upper)
-            # 如果颜色比例足够，则返回花色
-            ratio = self.check_color_presence(mask, image_area)
-            logger.info(f"{colorname} ratio: {round(ratio, 2)}") # debug print
-            if ratio > color_ratio_threshold:
-                basic_colorname = colorname.split('1')[0].split('2')[0].split('3')[0]
-                return basic_colorname
-        logger.debug(f"color matching failed")
-        return None
-    
-    # 识别扑克牌的花色 - 四色扑克
-    def recognize_suit(self, img, color_ratio_threshold):
-        suit = self.color_matching(img, self.color_ranges_pocker, color_ratio_threshold)
-        if not suit:
-            logger.debug("花色未识别")
-            return None
-        return suit
-
+# 预处理部分
     # auto_threshold: 自动二值化阈值  当图像的字体与背景分散在两极时，自适应比较方便。当背景色分散在两极时，截图范围大了会有bug，可以用手动值来解决
     def preprocess_image(self, image, auto_threshold = True, threshold_binary=100, binarize=True, name = None):
         if auto_threshold:
@@ -119,32 +85,6 @@ class ImageRecognizer:
             cv2.imwrite(savepath, img_resized)
             time.sleep(2)
         return img_resized
-    
-    # 识别图像中的点数
-    def recognize_rank(self, img):
-        # 预处理图像
-        preprocessed_img = self.preprocess_image(img, True, name = 'rank')
-        # OCR配置：不限制字符集，适合识别点数
-        custom_config = r'--oem 3 --psm 10'
-        rank_text = pytesseract.image_to_string(preprocessed_img, config=custom_config)
-        rank_text = rank_text.strip()  # 去除前后空格
-        logger.info(f"# Card_rank #: {rank_text}")
-        
-        # wpk后处理函数
-        # 后处理：校正常见的识别错误和“10”的特殊情况
-        corrected_rank = rank_text.replace('IO', '10').replace('I0', '10').replace('1O', '10').replace('0', '10').replace('O', '9')
-        corrected_rank = rank_text.replace('q', 'Q')
-        
-        
-        # 验证点数是否有效
-        valid_ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-        if corrected_rank in valid_ranks:
-            return corrected_rank
-        else:
-            logger.debug("点数未识别")
-            logger.warning(f"rank_text: {rank_text}, corrected_rank: {corrected_rank}")
-            
-            return None
 
     def detect_text_by_color_difference(self, img, std_dev_threshold):
         img = np.array(img)
@@ -159,6 +99,75 @@ class ImageRecognizer:
         else:
             logging.debug(f"# Color_diff #: {std_dev_threshold}:{max_std_dev}  no  text")
             return False
+    
+
+       
+# OCR 部分
+    # 识别图像中的点数
+    def recognize_rank(self, img):
+        # 预处理图像
+        preprocessed_img = self.preprocess_image(img, True, name = 'rank')
+        # psm 8: word mode, psm 10: single character mode, psm 7: a single line of text
+        custom_config = r'--psm 8 -c tessedit_char_whitelist=0123456789AJQK'
+        rank_text = pytesseract.image_to_string(preprocessed_img, config=custom_config)
+        rank_text = rank_text.strip()  # 去除前后空格
+        
+        rank = self.corrector_poker_rank(rank_text)
+        return rank
+    
+    # 识别图像中的数字
+    def recognize_digits(self, img):
+        threshold_text = self.detect_text_by_color_difference(img, self.threshold_color_diff_text_background)
+        if threshold_text is False: return None
+        """New OCR based on tesserocr rather than pytesseract, should be much faster"""
+        # 预处理图像 以前版本是auto_threshold是False 自动二值化会在没有数字的情况下误识别
+        preprocessed_img = self.preprocess_image(img, False, self.threshold_binary_white_text, name = 'digits')
+        # 配置Tesseract以仅识别数字
+        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789.$£B'
+        # 使用Tesseract OCR识别数字
+        digits = pytesseract.image_to_string(preprocessed_img, config=custom_config)
+        digits = digits.strip() # 去除前后空格
+
+        digits = self.corrector_digits(digits)
+        return digits
+
+    # 识别图像中的字符串, 自动二值化阈值 
+    def recognize_decision_string(self, img, auto_threshold = True):
+        threshold_text = self.detect_text_by_color_difference(img, self.threshold_color_diff_text_background)
+        if threshold_text is False: return None
+        # 预处理图像
+        preprocessed_img = self.preprocess_image(img, auto_threshold, self.threshold_binary_white_text, name = 'string')
+        # 使用Tesseract OCR识别字符串
+        custom_config = r'--oem 3 --psm 8 -c tessedit_char_whitelist="BetRaiseCheckCallFoldAllin"'
+        string = pytesseract.image_to_string(preprocessed_img, config=custom_config)
+        return string.strip()
+
+    # 识别图像中的黑色数字
+    def recognize_black_digits(self, img):
+        preprocessed_img = self.preprocess_image(img, True, self.threshold_binary_white_text)
+        # 使用Tesseract OCR识别字符串
+        custom_config = r'--oem 3 --psm 6 outputbase digits'
+        string = pytesseract.image_to_string(preprocessed_img, config=custom_config)
+        return string.strip()
+    
+
+# OCR corrector 部分
+    def corrector_poker_rank(self):
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def corrector_digits(self, digits):
+        # if not digits:
+        #     return None
+        
+        if digits == "":
+            return None
+        
+        # digits = digits.replace('B', '8').replace('O', '0').replace('o', '0').replace('S', '5').replace('s', '5').replace('Z', '2').replace('z', '2').replace('I', '1').replace('l', '1').replace('i', '1')
+        digits.replace('$', '').replace('£', '').replace('€', '').replace('B', '').replace(',', '.').replace('\n', '').replace(':','') # replace
+        return digits
+
+
+# 最终 recoginzer部分
     
     # 识别扑克牌
     def recognize_poker_card(self, img_rank, img_suit):
@@ -179,45 +188,39 @@ class ImageRecognizer:
         if result is None:
             logger.warning(f"# Poker rank : {rank} ## Poker suit : {suit}")
         return result
-       
-
-    # 识别图像中的数字
-    def recognize_digits(self, img):
-        threshold_text = self.detect_text_by_color_difference(img, self.threshold_color_diff_text_background)
-        if threshold_text is False: return None
-        """New OCR based on tesserocr rather than pytesseract, should be much faster"""
-        # 预处理图像 以前版本是auto_threshold是False
-        preprocessed_img = self.preprocess_image(img, True, self.threshold_binary_white_text, name = 'digits')
-        # 配置Tesseract以仅识别数字
-        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789.$£B'
-        # 使用Tesseract OCR识别数字
-        digits = pytesseract.image_to_string(preprocessed_img, config=custom_config)
-        
-        digits = digits.strip() # 去除前后空格
-        digits.replace('$', '').replace('£', '').replace('€', '').replace('B', '').replace(',', '.').replace('\n', '').replace(':','') # replace
-
-        if digits == "":
-            return None
-        else:
-            return digits
-
-    # 识别图像中的字符串, 自动二值化阈值 
-    def recognize_string(self, img, auto_threshold = True):
-        threshold_text = self.detect_text_by_color_difference(img, self.threshold_color_diff_text_background)
-        if threshold_text is False: return None
-        # 预处理图像
-        preprocessed_img = self.preprocess_image(img, auto_threshold, self.threshold_binary_white_text, name = 'string')
-        # 使用Tesseract OCR识别字符串
-        custom_config = r'--oem 3 --psm 8 -c tessedit_char_whitelist="BetRaiseCheckCallFoldAll"'
-        string = pytesseract.image_to_string(preprocessed_img, config=custom_config)
-        return string.strip()
-
-    # 识别图像中的字符串
-    def recognize_black_digits(self, img):
-        preprocessed_img = self.preprocess_image(img, True, self.threshold_binary_white_text)
-        # 使用Tesseract OCR识别字符串
-        custom_config = r'--oem 3 --psm 6 outputbase digits'
-        string = pytesseract.image_to_string(preprocessed_img, config=custom_config)
-        return string.strip()
     
+    # 识别扑克牌的花色 - 四色扑克
+    def recognize_suit(self, img, color_ratio_threshold):
+        suit = self.color_matching(img, self.color_ranges_pocker, color_ratio_threshold)
+        if not suit:
+            logger.debug("花色未识别")
+            return None
+        return suit
 
+
+# 颜色匹配部分
+    def check_color_presence(self, mask, image_area):
+        # 计算掩码中非零像素的比例
+        non_zero_count = cv2.countNonZero(mask)
+        ratio = non_zero_count / image_area
+        # 如果非零像素的比例大于阈值，则认为该颜色存在
+        return ratio
+    
+        # color matching
+    def color_matching(self, croped_img, color_ranges, color_ratio_threshold):
+        image_array = np.array(croped_img)
+        hsv = cv2.cvtColor(image_array, cv2.COLOR_BGR2HSV)
+        image_area = image_array.shape[0] * image_array.shape[1]
+
+        for colorname, (lower, upper) in color_ranges.items():
+            lower = np.array(lower, dtype="uint8")
+            upper = np.array(upper, dtype="uint8")
+            mask = cv2.inRange(hsv, lower, upper)
+            # 如果颜色比例足够，则返回花色
+            ratio = self.check_color_presence(mask, image_area)
+            logger.info(f"{colorname} ratio: {round(ratio, 2)}") # debug print
+            if ratio > color_ratio_threshold:
+                basic_colorname = colorname.split('1')[0].split('2')[0].split('3')[0]
+                return basic_colorname
+        logger.debug(f"color matching failed")
+        return None

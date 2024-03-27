@@ -40,7 +40,7 @@ class Round(Table):
             self.stage = 'river'
         else:
             self.stage = None
-            print(f'Stage calculation failed, cards num:{len(self.public_cards)}')
+            logger.error(f'Stage calculation failed, cards num:{len(self.public_cards)}')
         return self.stage
 
     def tabledict2round(self, table_dict): # 通过ir的table字典读取round数据
@@ -105,6 +105,8 @@ class Hands():
         self.raisers_lists = {'preflop': [], 'flop': [], 'turn': [], 'river': []} # 加注者列表
 
     def print_hands_info(self):
+        print("Hands Info:")
+        print(f"public cards: {self.rounds_list[-1].public_cards}, hero cards: {self.rounds_list[-1].players[0].cards}")
         for stage in ['preflop', 'flop', 'turn', 'river']:
             if self.actions_lists[stage] == []: continue
             print(f"{stage}:") # 打印当前阶段
@@ -141,7 +143,7 @@ class Hands():
         decision_mapping = {
             'F': ('Fold', player.pot, player.funds),
             'X': ('Check', player.pot, player.funds),
-            'C': ('Call', None, None),  # 特殊处理
+            'C': ('Call', player.pot, player.funds),  # 特殊处理
             # 'R1'至'R5'的处理将在后续添加
         }
 
@@ -150,7 +152,7 @@ class Hands():
             temp_action['action'] = action
             if decision == 'C':  # Call需要特殊处理
                 # 寻找最近的加注情况
-                if current_round.stage in self.raisers_lists and self.raisers_lists[current_round.stage]:
+                if self.raisers_lists[current_round.stage] != []:
                     last_raiser_pot = self.raisers_lists[current_round.stage][-1]['pot']
                     pot_difference = last_raiser_pot - player.pot
                     temp_action['pot'] = last_raiser_pot
@@ -178,7 +180,7 @@ class Hands():
                 # 使用raise_level从字典中获取对应的power
                 power = power_levels.get(raise_level, 0)  # 如果raise_level不存在，返回默认值0
                 if power == 0: print('Raise level error hands.py 170')
-                bet_multiplier = current_round.pot_total * (1+power)  # 仅示例，要根据底池算法计算算法有问题 #
+                bet_multiplier = current_round.pot_total * (0.5+power)  # 仅示例，要根据底池算法计算算法有问题 #
                 logger.info(f"Raise level: {raise_level}, power: {power}, pot_total: {current_round.pot_total}, bet_multiplier: {bet_multiplier}")
                 temp_action['action'] = f'Raise'
                 temp_action['pot'] = bet_multiplier
@@ -189,12 +191,15 @@ class Hands():
         actions_list = self.actions_lists[current_round.stage]
 
         for i, action_clip in enumerate(reversed(actions_list)):
-            if action_clip['abs_position'] == 0:
+            if action_clip['abs_position'] == 0 and action_clip['action'] == 'TBD':
                 actions_list[-i-1] = temp_action
         
         if decision[0] == 'R':
             raiser_list = self.raisers_lists[current_round.stage]
             raiser_list.append(temp_action)
+
+        
+
                 
     # 补全上一阶段的遗漏行动, make up之后，再把round加入rounds_list
     def make_up_actions_list(self, round):
@@ -229,25 +234,45 @@ class Hands():
         temp_action['funds'] = round.players[abs_position].funds
         return temp_action
 
+    # 遇到空座位的时候，前后位abs_position计算要顺序移动
+    def seat_pointer(self, abs_position, offset, round):
+        if self.rounds_list != []:
+            first_round = self.rounds_list[0]
+        else:
+            first_round = round
+        seat = abs_position
+        if offset > 0:
+            while offset > 0:
+                seat = (seat + 1) % first_round.max_players
+                if first_round.players[seat].join_hands is True:
+                    offset -= 1
+            return seat
+        elif offset < 0:
+            while offset < 0:
+                seat = (seat - 1) % first_round.max_players
+                if first_round.players[seat].join_hands is True:
+                    offset += 1
+            return seat
+
+
     def add_actions_raisers_list(self, round, new_stage_flag): 
         stage = round.stage
         actions_list = self.actions_lists[stage]
         raiser_list = self.raisers_lists[stage]
 
-        # 添加已经行动的人
-        # 起点 - hero
-        # new stage时hero是起点要特殊处理
+        # 添加已经行动的人: 起点 - max_players
         if new_stage_flag: # new stage
             if stage != 'preflop':
-                start_abs_postion = (round.dealer_abs_position + 1) % round.max_players # SB
+                # start_abs_postion = (round.dealer_abs_position + 1) % round.max_players # SB
+                start_abs_postion = self.seat_pointer(round.dealer_abs_position, +1, round) # SB
             else: # 'preflop'
-                start_abs_postion = (round.dealer_abs_position + 3) % round.max_players # UTG
+                # start_abs_postion = (round.dealer_abs_position + 3) % round.max_players # UTG
+                start_abs_postion = self.seat_pointer(round.dealer_abs_position, +3, round) # UTG
         else: # repeat stage
-            start_abs_postion = 1
+            start_abs_postion = self.seat_pointer(0, 1, round) # hero 下家
 
-        # new stage时hero是起点要特殊处理
-        if new_stage_flag and start_abs_postion == 0:
-            start_abs_postion = round.max_players
+        # 如果hero是起点时，没有已行动者，要跳过循环（新阶段，preflop utg, postflop sb）
+        if new_stage_flag and start_abs_postion == 0: start_abs_postion = round.max_players
         end_abs_postion = round.max_players
 
         for i in range(start_abs_postion, end_abs_postion):
@@ -265,23 +290,32 @@ class Hands():
             else: # repeat stage要把TBD更新成实际行动
                 for i, action_clip in enumerate(reversed(actions_list)):
                     if action_clip['abs_position'] == temp_action['abs_position']:
-                        if action_clip['action'] != 'TBD': logger.error(f"abs_position P{action_clip['abs_position']} action not TBD")
-                        actions_list[-i-1] = temp_action
-            if temp_action['action'] == 'Bet' or temp_action['action'] == 'Raise':
+                         if action_clip['action'] == 'TBD':
+                            actions_list[-i-1] = temp_action
+                         else:
+                             actions_list.append(temp_action)
+            if temp_action['action'] == 'Bet' or temp_action['action'] == 'Raise' or temp_action['action'] == 'Allin':
                 raiser_list.append(temp_action)
         
-        # 添加待行动的人，hero - last_actor
-        # 如果新阶段，last_actor是hero,要特殊处理，不存在老阶段hero最后行动还回到hero的情况
+        # 添加待行动的人，hero - last_actor，要处理0-0的异常
         start_abs_postion = 0
         if len(raiser_list) == 0: 
             if stage == 'preflop':
-                end_abs_postion = (round.dealer_abs_position + 2 + 1) % round.max_players # BB + 1
+                # end_abs_postion = (round.dealer_abs_position + 2 + 1) % round.max_players # BB + 1
+                end_abs_postion = self.seat_pointer(round.dealer_abs_position, +3, round) # BB + 1
             else:
-                end_abs_postion = round.dealer_abs_position + 1 # BTN + 1
-        else: end_abs_postion = raiser_list[-1]['abs_position'] - 1
-        # 如果新阶段，last_actor是hero,要特殊处理，不存在老阶段hero最后行动还回到hero的情况
-        if new_stage_flag and end_abs_postion == 0:
+                # end_abs_postion = round.dealer_abs_position + 1 # BTN + 1
+                end_abs_postion = self.seat_pointer(round.dealer_abs_position, +1, round) # BTN + 1
+        else: 
+            # end_abs_postion = raiser_list[-1]['abs_position'] - 1
+            end_abs_postion = self.seat_pointer(raiser_list[-1]['abs_position'], -1, round) # 上一个加注者的上家
+        
+        # 0 - 0 异常处理
+        if len(raiser_list) == 0 and end_abs_postion == 0: # hero上家是最后行动的，utg or sb
             end_abs_postion = round.max_players
+        elif len(raiser_list) != 0 and end_abs_postion == 0: # hero下家是最后加注的
+            # end_abs_postion = 1
+            end_abs_postion = self.seat_pointer(0, 1, round) # hero下家
 
         for i in range(start_abs_postion, end_abs_postion):
             if i in self.quit_list: continue
@@ -333,7 +367,7 @@ class Hands():
     
     def check_new_hands(self, round):
         flag = False
-        if len(round.public_cards) == 0 and any(player.pot == round.small_blind for player in round.players) and any(player.pot == round.big_blind for player in round.players):
+        if round.stage == 'preflop' and not self.rounds_list:
             flag = True
         return flag
 
@@ -346,12 +380,13 @@ class Hands():
         # 检查数据是否完整
         # 异常save到log和文件，给table发指令
         
+        # actionlist里存货与is active 及quit_list里的玩家 校验数量
         # wpk correct， 提高字符串识别准确度，就不用在这里矫正了
-        if new_hands_flag is False:
-            
-            for i in range(self.total_players):
+        if not new_hands_flag:
+            for i in range(round.max_players):
                 # 更新join_hands 后重新街识别问题
                 round.players[i].join_hands = self.rounds_list[0].players[i].join_hands
+                
                 # 更新fold之后decision识别准确度问题
                 if round.players[i].join_hands is True and round.players[i].have_cards is False:
                     round.players[i].decision = 'Fold' 

@@ -146,7 +146,7 @@ def process_rect(img, rect):
     # 输出OCR识别结果
     num = IRtool.recognize_digits(cropped_img)
     print(f"OCR Result: pot: {num}")
-    decision = IRtool.recognize_string(cropped_img)
+    decision = IRtool.recognize_decision_string(cropped_img)
     print(f"OCR Result: decision: {decision}")
     # txt = IRtool.recognize_black_digits(cropped_img) # 识别黑色数字 房间名
     # print(f"OCR Result: {txt}")
