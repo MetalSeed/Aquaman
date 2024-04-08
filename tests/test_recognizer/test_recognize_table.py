@@ -24,7 +24,7 @@ def main(ws_input_path):
     table.prr.windowshot_input(windowshot_pil)
 
     # 更新数据
-    table.update_table_info()
+    table.recognize_info()
     # table.update_players_data()
 
     table_info = table.get_table_dict()

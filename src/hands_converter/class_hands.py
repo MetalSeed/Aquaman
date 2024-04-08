@@ -20,6 +20,7 @@ class Round(Table):
     def __init__(self):
         super().__init__()
         self.stage = None  # 当前游戏阶段：preflop, flop, turn, river  
+        self.roundshot = None  # 当前round的截图
 
     def clear(self):
         self.super().clear()
@@ -42,6 +43,16 @@ class Round(Table):
             self.stage = None
             logger.error(f'Stage calculation failed, cards num:{len(self.public_cards)}')
         return self.stage
+    
+    def table2round(self, table):
+        table.recognize_info()
+        table_dict = table.get_table_dict()
+        self.tabledict2round(table_dict)
+        self.copytableshot(table)
+
+    def copytableshot(self, table):
+        table_shot = table.get_table_shot()
+        self.roundshot = table_shot.copy()
 
     def tabledict2round(self, table_dict): # 通过ir的table字典读取round数据
         # room data
@@ -91,7 +102,6 @@ class Round(Table):
         # Update round data from text
         return round
 
-# add_round（）, decision = make_decision(), add_hero_action(decision)
 class Hands():
     def __init__(self):
         # hands数据
@@ -103,6 +113,13 @@ class Hands():
         # 初始化逻辑省略，使用字典来组织行动列表和加注者列表
         self.actions_lists = {'preflop': [], 'flop': [], 'turn': [], 'river': []}
         self.raisers_lists = {'preflop': [], 'flop': [], 'turn': [], 'river': []} # 加注者列表
+
+        # 策略数据
+        self.ctr_bluff = 0
+
+    # 作为log保存, 保存到文件
+    def hands_save(self, path):
+        pass
 
     def print_hands_info(self):
         print("Hands Info:")
@@ -119,10 +136,6 @@ class Hands():
                 raiser_info = ', '.join(f"{key}: {value}" for key, value in raiser.items())
                 print(f"       {raiser_info}")
 
-        #####
-        # 检查hero在utg,btn,sb,bb,utg上面逻辑是否成立
-        # add round, add action_list, add hero_decision  都要更新last_raiser
-        # 有raise则last_raiser，无则flop到bb，turn和river到btn
 
     # 把hero的决策加入到actions_list
     def add_hero_action(self, decision):
@@ -132,6 +145,7 @@ class Hands():
 
         # 初始化temp_action
         temp_action = {
+            'position_name': player.position_name,
             'position': player.position, 
             'action': None, 
             'pot': 0.0, 
@@ -223,8 +237,9 @@ class Hands():
                     action['funds'] = player_next_round.funds + player_next_round.pot
     # 组装行动字典
     def get_action_dict(self, abs_position, round, tbd = False):
-        temp_action = {'position': None, 'action': None, 'pot': 0, 'funds': 0, 'abs_position': None}
+        temp_action = {'position_name': None, 'position': None, 'action': None, 'pot': 0, 'funds': 0, 'abs_position': None}
         temp_action['abs_position'] = abs_position
+        temp_action['position_name'] = round.players[abs_position].position_name
         temp_action['position'] = round.players[abs_position].position
         if tbd:
             temp_action['action'] = 'TBD'
@@ -327,14 +342,44 @@ class Hands():
             actions_list.append(temp_action)
     
 
+    def remap_table_positions(self, total_players):
+        # 定义所有可能的位置名称
+        positions = ["BTN", "SB", "BB", "UTG", "EP1", "EP2", "MP1", "MP2", "CO"]
+
+        # 根据玩家总数确定需要保留的位置
+        positions_map = {
+            9: positions,
+            8: ["BTN", "SB", "BB", "UTG", "EP1", "MP1", "MP2", "CO"],  # 跳过EP2
+            7: ["BTN", "SB", "BB", "UTG", "EP1", "MP1", "CO"],  # 跳过MP2
+            6: ["BTN", "SB", "BB", "UTG", "MP1", "CO"],  # 跳过EP1, EP2, MP2
+            5: ["BTN", "SB", "BB", "UTG", "CO"],  # 跳过EP1, EP2, MP1, MP2
+        }
+
+        # 默认保留最基本的位置，适用于少于5人的情况
+        new_positions = positions_map.get(total_players, ["BTN", "SB", "BB", "UTG", "CO"])
+        return new_positions
+    
     # 检查无误之后，把round加入rounds_list，再进行后续更新
     def add_round(self, round):        
         # 新手牌，初始化hands
         self.new_hands_flag = self.check_new_hands(round)
         if self.new_hands_flag:
             self.__init__()
+            # 计算玩家总数
             if self.total_players is None and round.stage == 'preflop': 
                 self.total_players = sum(1 for player in round.players if player.join_hands is True)
+            
+            # 根据实际参与游戏的玩家数调整positions
+            position_names = self.remap_table_positions(self.total_players)
+            active_positions = [player.position for player in round.players if player.join_hands] # 收集所有参与游戏的玩家的位置
+            active_positions_sorted = sorted(active_positions) # 对活跃的座位进行排序
+            # 创建一个映射表，将排序后的活跃座位映射到新的位置名称
+            position_mapping = {pos: name for pos, name in zip(active_positions_sorted, position_names)}
+
+            # 然后，为每个参与游戏的玩家分配新的位置名称
+            for player in round.players:
+                if player.join_hands:
+                    player.position_name = position_mapping[player.position]
 
         if self.datacheck(self.new_hands_flag, round) is not True:
             print('Data check failed')
@@ -379,17 +424,21 @@ class Hands():
         # jon_hands active
         # 检查数据是否完整
         # 异常save到log和文件，给table发指令
-        
         # actionlist里存货与is active 及quit_list里的玩家 校验数量
-        # wpk correct， 提高字符串识别准确度，就不用在这里矫正了
+
+        # wpk correct，提高字符串识别准确度，就不用在这里矫正了
         if not new_hands_flag:
             for i in range(round.max_players):
-                # 更新join_hands 后重新街识别问题
-                round.players[i].join_hands = self.rounds_list[0].players[i].join_hands
-                
-                # 更新fold之后decision识别准确度问题
+                # 修正fold之后decision字符串识别准确度问题
                 if round.players[i].join_hands is True and round.players[i].have_cards is False:
                     round.players[i].decision = 'Fold' 
+            
+                # 赋值开局时的join_hands信息，避免后街识别错误
+                round.players[i].join_hands = self.rounds_list[0].players[i].join_hands
+
+                # 复制开局时的位置信息
+                if round.players[i].join_hands is True:
+                    round.players[i].position_name = self.rounds_list[0].players[i].position_name
         
         # error dicision，active的error 用筹码校验
         return check_flag

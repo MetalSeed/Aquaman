@@ -18,7 +18,8 @@ from src.recognizer.nlth_platform import filled_room_config, wpkRR
 class Player:
     def __init__(self, abs_position):
         self.abs_position = abs_position  # 玩家座位号
-        self.positon = None  # 玩家相对庄家0的位置    
+        self.positon = None  # 玩家相对庄家0的位置
+        self.position_name = None # 座位名称    
 
         self.have_cards = False  # 是否有手牌   
         self.pot = None # 玩家当前回合的赌注
@@ -158,12 +159,17 @@ class Table:
         for i in range(self.max_players):
             self.players[i].id = self.prr.get_player_id(i)
 
-    def update_table_info(self):
+    def recognize_info(self):
+        self.clear()
         self.updata_publicly_data()
         self.update_players_data()
         self.updata_players_positon()
         self.update_hero_bet_power()  
         # self.undate_platyers_id()
+
+    # 返回PIL截图
+    def get_table_shot(self):
+        return self.prr.window_shot
 
     # 打包成dict,交给converter转换成round
     def get_table_dict(self):

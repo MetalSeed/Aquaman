@@ -21,3 +21,6 @@ bet2_power: 0.5
 bet3_power: 0.75
 bet4_power: 1
 bet5_power: 1.4
+
+# solver config
+version: '1.0'

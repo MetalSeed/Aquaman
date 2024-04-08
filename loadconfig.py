@@ -17,6 +17,11 @@ filled_room_config = {}
 filled_room_rects = {}
 template_dir = None
 
+# strategy
+strategy_preflop = {}
+strategy_postflop = {}
+
+
 def load_config():
     
     # 读取默认房间配置（在config路径下）
@@ -50,11 +55,14 @@ def load_config():
     room_rects_yaml = os.path.join(script_dir, 'config', f"{filled_room_config['platform']}{filled_room_config['max_players']}.yaml")
     filled_room_rects = fill_dict_from_yaml(rects_dict, room_rects_yaml)
 
-    # 获取模板路径
+    # 获取图片模板路径（用于图像匹配）
     global template_dir
     script_dir = os.path.dirname(__file__)
     template_dir = os.path.join(script_dir, 'config', 'templates', f"{filled_room_config['platform']}")
     # print(f"template_dir: {template_dir}")
+
+    # 获取游戏策略配置
+
 
 
 load_config()

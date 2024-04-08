@@ -66,8 +66,8 @@ class RoomRecognizer(ImageRecognizer):
                 self.windowshot = None
                 # print("不是hero的回合")
                 time.sleep(1)
-                if time.time() - start_time > 200:  # 超过200秒
-                    print(f"table_shoter，超过200秒没轮到hero")
+                if time.time() - start_time > 300:  # 超过200秒
+                    print(f"table_shoter，超过300秒没轮到hero")
                     return None
 
     # 图像匹配精度 0.9 要求高
@@ -96,7 +96,7 @@ class RoomRecognizer(ImageRecognizer):
             return True
         else:
             return False
-    def is_hero_turn(self, mode=2): # 使用模板匹配
+    def is_hero_turn(self, mode=2): # 默认使用颜色
         if mode == 1: # mode 1: 模板匹配
             result = self.is_hero_turn_tempate_matching()
         elif mode == 2: # mode 2: 颜色匹配

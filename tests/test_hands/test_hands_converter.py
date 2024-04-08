@@ -40,8 +40,7 @@ def hands_input(hands, table, windowshotid, decision):
     table.prr.windowshot_input(windowshot_pil)
 
     # IR
-    table.clear()
-    table.update_table_info()
+    table.recognize_info()
     table.print_table_dict()
     table_dict = table.get_table_dict()
     
