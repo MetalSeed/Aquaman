@@ -1,22 +1,15 @@
 import os
-import sys
-import pandas as pd
-import logging
 import random
 import re
-log = logging.getLogger(__name__)
+import sys
 
-# 获取当前脚本文件的绝对路径
-script_path = os.path.abspath(__file__)
-# 获取当前脚本所在的目录（tools）
-script_dir = os.path.dirname(script_path)
-parent_dir = os.path.dirname(script_dir)
-grandparent_dir = os.path.dirname(parent_dir)
-# 降Aquaman子目录添加到sys.path
-sys.path.append(grandparent_dir)
+prjroot = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
+sys.path.append(prjroot) # 把aqm根目录加入系统路径
 
-from src.tools.aqm_utils import get_file_full_name
 from src.tools.excel_operations import Excel_Sheet_Op
+
+import logging
+log = logging.getLogger(__name__)
 
 class PreflopDM:
     def derive_preflop_sheet_name(self, action_list, raiser_list, hero_position):

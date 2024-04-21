@@ -1,15 +1,45 @@
+import logging
 import numpy as np
 from enum import Enum
 import random
 
-from .curvefitting import *
-from .montecarlo_python import *
-from .outs_calculator import Outs_Calculator
 
 log = logging.getLogger(__name__)
+# winPro = Equity
+
+class DecisionTypes(Enum):
+    i_am_back, fold, check, call, bet1, bet2, bet3, bet4, bet5, bet_bluff, call_deception, check_deception = \
+    ['Imback', 'F', 'X', 'C', 'B1', 'B2', 'B3', 'B4', 'B5', 'Bet Bluff', 'Call Deception', 'Check Deception']
+
+class Positions(Enum):
+    SB, BB, UTG, EP1, EP2, MP1, MP2, CO, BTN = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+class Stages(Enum):
+    preflop, flop, turn, river = ['preflop', 'flop', 'turn', 'river']
+
+class PotTypes(Enum):
+    single_raise, multi_raise, single_call, multi_call, raise_call, call_raise, call_call = \
+    ['single raise', 'multi raise', 'single call', 'multi call', 'raise call', 'call raise', 'call call']
 
 
-class DecisionBase:
+class BasicAnalysis:
+    # 位置 事件 范围，EV 偏移 赢啥 换思 阻断， 频率 偏差
+    # preflop 计算
+    
+    # 获得手牌缩写, ABs, ABo, AA 
+    def get_cards_abbreviation(self, input_cards, add_o_to_pairs=False):
+        card_values = {'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2}
+        card1 = input_cards[0][0]
+        card2 = input_cards[1][0]
+        suited_str = 's' if input_cards[0][1] == input_cards[1][1] else 'o'
+        if card1[0] == card2[0]:
+            if add_o_to_pairs: suited_str = "o"
+            else: suited_str = ''
+        if card_values[card1] < card_values[card2]: card1, card2 = card2, card1
+        return card1 + card2 + suited_str
+
+
+class DecisionBase(BasicAnalysis):
     # Contains routines that make the actual decisions to play: the main function is make_decision
     def calc_bet_EV(self, E, P, S, c, table): # Equity, Pot, Steak, Config, Table
         # param c: 配置参数，可能影响计算
@@ -56,52 +86,6 @@ class DecisionBase:
         """        
         return np.round((equity ** pw) * bigBlindMultiplier, 2)
 
-    # 获得手牌缩写
-    def get_cards_abbreviation(self, input_cards, add_o_to_pairs=False):
-        card_values = {'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2}
-        card1 = input_cards[0][0]
-        card2 = input_cards[1][0]
-        suited_str = 's' if input_cards[0][1] == input_cards[1][1] else 'o'
-        if card1[0] == card2[0]:
-            if add_o_to_pairs: suited_str = "o"
-            else: suited_str = ''
-        if card_values[card1] < card_values[card2]: card1, card2 = card2, card1
-        return card1 + card2 + suited_str
-    
-
-# 参数说明
-# 赢得牌局的概率 (WinProb)：这是你在特定情况下赢得手牌的概率。这可以基于数学计算、经验或使用特定的扑克计算工具来估算。
-# 赢时将得到的总底池 (WinPot)：如果你赢了牌局，你将从底池中赢得的总金额（包括你自己的下注）。
-# 输掉牌局的概率：这可以简单地用 1 - WinProb 计算。
-# 下注的金额 (BetAmount)：这是你打算下注的金额。
-
-
-""""
-Strategy Definition
-t contains variables that have been scraped from the table
-h contains values from the historical (last) decision
-p contains values from the Strategy as defined in the xml file
-"""
-
-
-class DecisionTypes(Enum):
-    i_am_back, fold, check, call, bet1, bet2, bet3, bet4, bet5, bet_bluff, call_deception, check_deception = \
-    ['Imback', 'F', 'X', 'C', 'B1', 'B2', 'B3', 'B4', 'B5', 'Bet Bluff', 'Call Deception', 'Check Deception']
-
-class Positions(Enum):
-    SB = 1
-    BB = 2
-    UTG = 3
-    EP1 = 4
-    EP2 = 5
-    MP1 = 6
-    MP2 = 7
-    CO = 8
-    BTN = 0
-
-class Stages(Enum):
-    preflop, flop, turn, river = ['preflop', 'flop', 'turn', 'river']
-
 
 class Decison(DecisionBase):
     def __init__(self, hands):
@@ -129,19 +113,8 @@ class Decison(DecisionBase):
         self.hero_cards = hands.rounds_list[-1].players[0].cards
         self.hero_cards_abbreviation = self.get_cards_abbreviation(self.hero_cards)
     
-    
-    # 位置 事件 范围，EV 偏移 赢啥 换思 阻断， 频率 偏差
-    # preflop 计算
 
-    # handslevel
-        # draw
-        # TPTK, TwoPair, Set, Straight, Flush, FullHouse, Quads, StraightFlush, RoyalFlush
-        # TPGK
 
-    # outs计算
-    # equity
-    # EV
-    # # BO VO
 
     def calc_equity(self):
         pass
@@ -159,3 +132,6 @@ class Decison(DecisionBase):
             pass
         elif stage == Stages.river.value:
             pass
+
+
+

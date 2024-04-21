@@ -13,6 +13,31 @@ sys.path.append(grandparent_dir)
 
 from src.tools.aqm_utils import get_file_full_name
 
+import pandas as pd
+
+###################
+#####  demo  ######
+###################
+# 假设的Excel文件路径
+file_path = 'multi_level_index.xlsx'
+
+# 读取Excel文件
+# header=[0, 1, 2] 表示前三行用作列的多级索引
+# index_col=[0, 1, 2] 表示前三列用作行的多级索引
+df = pd.read_excel(file_path, header=[0, 1, 2], index_col=[0, 1, 2])
+
+# 展示读取的DataFrame
+print(df)
+
+# 示例：访问多级索引的数据，假设我们要访问特定的行和列
+# row_key1, row_key2, row_key3 = 'RowLevel1', 'RowLevel2', 'RowLevel3'
+# col_key1, col_key2, col_key3 = 'ColLevel1', 'ColLevel2', 'ColLevel3'
+# specific_data = df.loc[(row_key1, row_key2, row_key3), (col_key1, col_key2, col_key3)]
+# print(specific_data)
+
+###################
+#####  demo  ######
+###################
 
 class Excel_Sheet_Op:
     def __init__(self, excel_path):
